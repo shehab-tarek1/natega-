@@ -155,21 +155,35 @@
                 تحميل بيان الدرجات
             </h2>
             
-            <div class="border border-dashed border-teal-300 rounded-lg p-3 text-center bg-teal-50/10 hover:bg-teal-50/20 cursor-pointer transition-all" onclick="document.getElementById('gradeFileInput').click()">
-                <p class="text-[10px] font-bold text-teal-950">اضغط لرفع صورة بيان الدرجات</p>
+            <!-- تصميم جديد ومحسن لمنطقة رفع ومعاينة الصورة -->
+            <div id="uploadArea" class="border-2 border-dashed border-teal-400 rounded-xl p-4 text-center bg-teal-50 hover:bg-teal-100 cursor-pointer transition-all relative overflow-hidden" onclick="document.getElementById('gradeFileInput').click()">
                 <input type="file" id="gradeFileInput" class="hidden" accept="image/*" onchange="processSelectedFile(event)">
                 
-                <div class="mt-1.5 flex justify-center">
-                    <img id="gradeImagePreview" class="max-h-16 rounded shadow-sm hidden border border-teal-600" alt="معاينة">
+                <!-- الحالة الافتراضية قبل الرفع -->
+                <div id="uploadPlaceholder" class="flex flex-col items-center justify-center space-y-2">
+                    <svg class="w-10 h-10 text-teal-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    <p class="text-[11px] font-bold text-teal-900">اضغط هنا لرفع صورة السجل الأكاديمي</p>
+                    <p class="text-[9px] font-semibold text-teal-700">يدعم الصور (JPG, PNG)</p>
+                </div>
+
+                <!-- حالة المعاينة بعد الرفع -->
+                <div id="previewContainer" class="hidden flex flex-col items-center justify-center">
+                    <div class="relative group w-full flex justify-center">
+                        <img id="gradeImagePreview" class="max-h-32 rounded-lg shadow-md border-2 border-teal-500 object-contain" alt="معاينة">
+                        <div class="absolute inset-0 bg-teal-900/60 hidden group-hover:flex items-center justify-center rounded-lg transition-all">
+                            <span class="text-white text-[11px] font-bold flex items-center gap-1">
+                                🔄 تغيير الصورة
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <div class="mt-2 flex gap-1.5">
-                <button type="button" onclick="runGeminiAiAnalysis()" class="flex-1 bg-teal-800 text-white font-bold py-1.5 px-2 rounded hover:bg-teal-900 transition-all text-[11px] flex items-center justify-center gap-1">
-                    <span>✨ استخراج بالذكاء الاصطناعي</span>
-                </button>
-                <button type="button" onclick="resetApp()" class="bg-rose-600 text-white font-bold py-1.5 px-3 rounded hover:bg-rose-700 transition-all text-[11px] flex items-center justify-center">
-                    🔄 البدء من جديد
+            <div class="mt-2.5">
+                <button type="button" onclick="runGeminiAiAnalysis()" class="w-full bg-teal-800 text-white font-bold py-2 px-3 rounded hover:bg-teal-900 transition-all text-[11px] flex items-center justify-center gap-1 shadow-sm">
+                    <span>✨ استخراج الدرجات بالذكاء الاصطناعي</span>
                 </button>
             </div>
         </div>
@@ -270,12 +284,16 @@
                 </div>
             </div>
 
+            <!-- أزرار التحكم بالشهادة -->
             <div class="mt-4 flex gap-1.5 no-print">
                 <button type="button" onclick="window.print()" class="flex-1 bg-slate-800 text-white font-bold py-1 px-2 rounded hover:bg-slate-900 transition-all text-[10px]">
                     🖨️ طباعة
                 </button>
                 <button id="saveCloudBtn" type="button" onclick="saveCertificateToFirebaseCloud()" class="flex-1 bg-emerald-600 text-white font-bold py-1 px-2 rounded hover:bg-emerald-700 transition-all text-[10px]">
                     ☁️ حفظ سحابي
+                </button>
+                <button type="button" onclick="resetApp()" class="flex-1 bg-rose-600 text-white font-bold py-1 px-2 rounded hover:bg-rose-700 transition-all text-[10px]">
+                    🔄 البدء من جديد
                 </button>
             </div>
         </div>
@@ -290,17 +308,22 @@
             </div>
         </div>
 
-        <!-- الفوتر والمطور (طلبك الجديد) -->
-        <div class="mt-6 bg-teal-950 text-teal-100 p-4 rounded-xl text-center space-y-2 no-print shadow-lg border border-teal-800 relative overflow-hidden">
-            <p class="text-[11px] font-bold relative z-10 text-teal-300">جميع الحقوق محفوظة © 2026</p>
-            <p class="text-[12px] font-black text-amber-400 relative z-10 flex justify-center items-center gap-1">
+        <!-- الفوتر الأكاديمي الرسمي المذهب وبصمة المطور -->
+        <div class="mt-6 bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 text-slate-200 p-4 rounded-xl text-center space-y-2 no-print shadow-xl border border-amber-500/25 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+            
+            <div class="flex justify-center items-center gap-1.5 mb-1 relative z-10">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                <p class="text-[10px] font-bold tracking-wider uppercase text-amber-400/90">بوابة التقييم الأكاديمي المعتمدة</p>
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+            </div>
+            
+            <p class="text-[12px] font-black text-white relative z-10">
                 👨‍💻 تم التطوير بواسطة: شهاب طارق صلاح
             </p>
-            <div class="pt-2 border-t border-teal-800/50 flex justify-center items-center gap-2 relative z-10">
-                <span class="text-[10px] font-semibold text-teal-200">إجمالي الزيارات:</span>
-                <!-- عداد زيارات حي وحقيقي -->
-                <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=zag-commerce-grade.app&count_bg=%230D5C4E&title_bg=%23042F26&icon=&icon_color=%23E7E7E7&title=%F0%9F%91%81%EF%B8%8F&edge_flat=true" alt="Visits Counter" class="h-4 rounded shadow">
-            </div>
+            <p class="text-[9px] font-semibold text-slate-400 relative z-10">
+                جميع الحقوق محفوظة © ٢٠٢٦ - كلية التجارة جامعة الزقازيق
+            </p>
         </div>
 
     </div>
@@ -311,8 +334,8 @@
         let verifiedGradesData = { acquiredTotal: 0, maxTotal: 0, percentage: 0, details: {} }; 
         let activeStructure = []; 
         
-        // مفتاح جيمناي الخاص بك
-        const apiKey = "AQ.Ab8RN6KLdJoBanQr4tw5TgeMieHmz6tEIG2s5JeyP5a-rMGrUQ"; 
+        // مفتاح جوجل الجديد المعتمد (AQ.)
+        const apiKey = "AQ.Ab8RN6KxbTC1-LKbn3J8rAqx0e9_uXj5rQoL9dxY2mL8yackAg"; 
 
         // الهيكل العام المفترض لترميز الفصول
         const masterStructure = [
@@ -340,9 +363,10 @@
             document.getElementById('academicYear').value = "all";
             document.getElementById('gradeFileInput').value = "";
             
-            const imgPreview = document.getElementById('gradeImagePreview');
-            imgPreview.classList.add('hidden');
-            imgPreview.src = "";
+            // إعادة ضبط منطقة رفع الصورة
+            document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            document.getElementById('previewContainer').classList.add('hidden');
+            document.getElementById('gradeImagePreview').src = "";
             
             globalBase64Image = "";
             verifiedGradesData = { acquiredTotal: 0, maxTotal: 0, percentage: 0, details: {} };
@@ -389,6 +413,7 @@
             }
         };
 
+        // دالة معالجة الصورة وتغيير واجهة المعاينة
         window.processSelectedFile = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -397,7 +422,11 @@
             reader.onload = function(e) {
                 const imgPreview = document.getElementById('gradeImagePreview');
                 imgPreview.src = e.target.result;
-                imgPreview.classList.remove('hidden');
+                
+                // إخفاء الأيقونة الافتراضية وإظهار الصورة
+                document.getElementById('uploadPlaceholder').classList.add('hidden');
+                document.getElementById('previewContainer').classList.remove('hidden');
+                
                 globalBase64Image = e.target.result; 
             };
             reader.readAsDataURL(file);
@@ -417,24 +446,28 @@
                 showCustomMessage("⚠️ يرجى تعبئة اسم الطالب أولاً.", "error");
                 return;
             }
-            if (!fileInput.files || fileInput.files.length === 0) {
+            if (!globalBase64Image) {
                 showCustomMessage("⚠️ يرجى رفع صورة بيان الدرجات.", "error");
                 return;
             }
 
-            showCustomMessage("⏳ جاري استخراج البيانات بالذكاء الاصطناعي... يرجى الانتظار...", "loading");
+            showCustomMessage("⏳ جاري تحليل واستخراج درجات السجل الأكاديمي بدقة متناهية...", "loading");
             document.getElementById('officialCertificateBox').classList.add('hidden');
 
             const rawBase64 = globalBase64Image.split(',')[1];
             const mimeType = globalBase64Image.split(';')[0].split(':')[1] || 'image/jpeg';
 
-            const systemPrompt = `You are an expert academic transcript parser for Zagazig University.
-Analyze the attached image and extract grades.
-STRICT INSTRUCTIONS:
-1. ONLY extract academic years/semesters that are clearly visible and legible in the image.
-2. IF A SEMESTER OR YEAR IS NOT VISIBLE IN THE IMAGE, DO NOT INCLUDE ITS KEY IN THE JSON AT ALL. OMIT IT COMPLETELY. DO NOT INVENT GRADES.
-3. CRITICAL: Identify and strictly EXCLUDE the subject "Human Rights" (حقوق الإنسان) from both the acquired score (الدرجة المكتسبة) and maximum score (الدرجة العظمى).
-Return the result in raw JSON representing the active visible semesters only.`;
+            const systemPrompt = `You are a highly precise OCR and academic transcript auditor system for Zagazig University.
+Your task is to extract total semester grades with 100% mathematical precision.
+DIRECTIONS:
+1. ONLY extract visible semesters. OMIT keys for missing/unclear semesters. Do not invent data.
+2. CRITICAL CALCULATION RULE:
+   - For each visible semester, locate the total score (المجموع الكلي للفصل).
+   - If the total score of the semester is printed directly in the image, extract it.
+   - If you must sum individual course grades: do it with absolute precision.
+   - You MUST EXCLUDE "Human Rights" (حقوق الإنسان) from both the acquired score and max score. For example, if a semester total is 500 (with 50 for Human Rights), the new max is 450, and you must subtract the student's score in Human Rights from their acquired total.
+3. Verify that the acquired score is mathematically logical and does not exceed the maximum score.
+4. Output strict raw JSON conforming to the schema.`;
 
             const payload = {
                 contents: [{
@@ -461,8 +494,8 @@ Return the result in raw JSON representing the active visible semesters only.`;
                 }
             };
 
-            // استخدام الموديل الأحدث gemini-2.5-flash لحل مشكلة عدم العثور على الموديل
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            // ✅ إعادة استخدام موديل gemini-3.5-flash المتوافق مع مفاتيح AQ
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
 
             try {
                 const response = await fetch(url, {
@@ -806,7 +839,11 @@ Return the result in raw JSON representing the active visible semesters only.`;
             if (data.imageTextBase64) {
                 const imgPreview = document.getElementById('gradeImagePreview');
                 imgPreview.src = data.imageTextBase64;
-                imgPreview.classList.remove('hidden');
+                
+                // تحديث واجهة المعاينة عند الاسترداد
+                document.getElementById('uploadPlaceholder').classList.add('hidden');
+                document.getElementById('previewContainer').classList.remove('hidden');
+                
                 globalBase64Image = data.imageTextBase64;
             }
 
