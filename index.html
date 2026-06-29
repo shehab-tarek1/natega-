@@ -1,80 +1,92 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- إعدادات أيقونة الموقع ومعاينة الواتساب (قبعة التخرج) -->
     <title>بوابة درجات الطلاب - تجارة الزقازيق</title>
-    <meta name="description" content="مستخرج الدرجات الذكي لتحليل وحساب التقديرات الأكاديمية تلقائياً لطلاب كلية التجارة.">
+    <meta name="description" content="مستخرج الدرجات الذكي لتحليل وحساب التقديرات الأكاديمية تلقائياً لطلاب كلية التجارة جامعة الزقازيق.">
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/4035/4035105.png" type="image/png">
     
-    <!-- Open Graph Meta Tags for WhatsApp & Facebook -->
-    <meta property="og:title" content="بوابة درجات الطلاب - تجارة الزقازيق 🎓">
-    <meta property="og:description" content="مستخرج الدرجات الذكي لتحليل وحساب التقديرات الأكاديمية تلقائياً. تم التطوير بواسطة شهاب طارق صلاح.">
-    <meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/4035/4035105.png">
-    <meta property="og:type" content="website">
-    
-    <!-- Tailwind CSS لتنسيق الواجهة للهاتف -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap');
+        
         body {
             font-family: 'Cairo', sans-serif;
-            background-color: #f2f7f5;
+            background-color: #f3f4f6;
             -webkit-tap-highlight-color: transparent;
         }
-        
-        /* إعدادات الطباعة للشهادة الرسمية */
+
+        /* تحسينات الطباعة للشهادة الأكاديمية */
         @media print {
-            body { background: white; padding: 0; }
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
+            body { 
+                background: white; 
+                padding: 0; 
+                margin: 0;
+            }
+            .no-print { 
+                display: none !important; 
+            }
+            .print-only { 
+                display: block !important; 
+            }
             .certificate-container { 
-                border: 4px double #0d5c4e !important; 
-                padding: 10px !important; 
+                border: 6px double #0f766e !important; 
+                padding: 24px !important; 
                 box-shadow: none !important; 
                 width: 100% !important; 
                 max-width: 100% !important; 
                 margin: 0 !important;
+                background: white !important;
+                color: black !important;
             }
         }
     </style>
 
-    <!-- تضمين حزمة Firebase v11.6.1 السحابية -->
+    <!-- Firebase SDK Modules -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // إعدادات Firebase الخاصة بمشروعك
-        const firebaseConfig = {
-            apiKey: "AIzaSyCGYfEbMTtDNeYRTZy6RdhhnIoGbUyFqGQ",
-            authDomain: "natega-744b7.firebaseapp.com",
-            projectId: "natega-744b7",
-            storageBucket: "natega-744b7.firebasestorage.app",
-            messagingSenderId: "21967495472",
-            appId: "1:21967495472:web:e7af7c5853e2f43f22e8f5",
-            measurementId: "G-V98BVD61SS"
-        };
+        // إعدادات Firebase من البيئة أو الإعدادات الافتراضية الممررة
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                apiKey: "AIzaSyCGYfEbMTtDNeYRTZy6RdhhnIoGbUyFqGQ",
+                authDomain: "natega-744b7.firebaseapp.com",
+                projectId: "natega-744b7",
+                storageBucket: "natega-744b7.firebasestorage.app",
+                messagingSenderId: "21967495472",
+                appId: "1:21967495472:web:e7af7c5853e2f43f22e8f5",
+                measurementId: "G-V98BVD61SS"
+            };
 
-        const appId = 'natega-744b7-app';
-
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'natega-744b7-app';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // إتاحة الكائنات عالمياً للوصول إليها في السكربت العادي
         window.db = db;
         window.auth = auth;
         window.appId = appId;
 
+        // المصادقة الآمنة حسب توجيهات المنصة (القاعدة 3)
         async function runAuthSetup() {
             try {
-                await signInAnonymously(auth);
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
             } catch (error) {
                 console.error("Firebase Auth Failure:", error);
-                showCustomMessage("فشل الاتصال الآمن بالسيرفر السحابي. تأكد من تفعيل Anonymous Auth في فايربيز.", "error");
+                showCustomMessage("⚠️ فشل الاتصال بخدمات التحقق السحابية.", "error");
             }
         }
 
@@ -83,14 +95,15 @@
             if (user) {
                 window.currentUser = user;
                 if (statusBadge) {
-                    statusBadge.innerHTML = "🟢 متصل سحابياً";
-                    statusBadge.className = "bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-emerald-300";
+                    statusBadge.innerHTML = "🟢 متصل سحابياً آمن";
+                    statusBadge.className = "bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-300 shadow-sm";
                 }
                 loadSavedCertificatesFromCloud(); 
             } else {
+                window.currentUser = null;
                 if (statusBadge) {
-                    statusBadge.innerHTML = "🔴 غير متصل";
-                    statusBadge.className = "bg-rose-100 text-rose-800 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-rose-300";
+                    statusBadge.innerHTML = "🔴 غير متصل سحابياً";
+                    statusBadge.className = "bg-rose-100 text-rose-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-rose-300 shadow-sm";
                 }
             }
         });
@@ -98,46 +111,48 @@
         runAuthSetup();
     </script>
 </head>
-<body class="p-1 md:p-3">
+<body class="bg-slate-100 min-h-screen text-slate-800 antialiased p-3 md:p-6">
 
-    <!-- الحاوية الرئيسية للهاتف المحمول -->
-    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md p-3 relative border border-slate-100 overflow-hidden text-xs">
+    <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-xl p-4 md:p-6 relative border border-slate-200 overflow-hidden text-sm">
         
-        <!-- شارة السيرفر السحابية المدمجة -->
-        <div class="flex justify-between items-center mb-3 no-print border-b border-slate-100 pb-1.5">
-            <span class="text-[10px] font-bold text-teal-900">تجارة الزقازيق 🎓</span>
-            <span id="dbStatusBadge" class="bg-amber-100 text-amber-800 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-amber-300">⏳ جاري الاتصال...</span>
+        <!-- الترويسة العلوية للمنظومة -->
+        <div class="flex justify-between items-center mb-5 no-print border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">🎓</span>
+                <span class="text-xs font-black text-teal-900 tracking-wide">جامعة الزقازيق - كلية التجارة</span>
+            </div>
+            <span id="dbStatusBadge" class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2.5 py-1 rounded-full border border-amber-300">⏳ جاري الاتصال الآمن...</span>
         </div>
 
-        <!-- الترويسة الرئيسية للهاتف -->
-        <div class="text-center mb-4 no-print">
-            <h1 class="text-sm font-black text-teal-950">مستخرج الدرجات الذكي</h1>
+        <div class="text-center mb-6 no-print">
+            <h1 class="text-xl font-black text-teal-950">مستخرج الدرجات الذكي</h1>
+            <p class="text-slate-500 text-xs mt-1">حلّل بيان درجاتك الأكاديمي، واحصل على تقرير فوري معتمد بدقة متناهية</p>
         </div>
 
-        <!-- البيانات الأساسية للطالب -->
-        <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 mb-3 no-print">
-            <h2 class="text-[10px] font-extrabold text-teal-950 mb-2 flex items-center gap-1">
-                <span class="bg-teal-700 text-white w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold">١</span>
-                البيانات الأساسية
+        <!-- الخطوة 1: البيانات الشخصية -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 no-print shadow-sm">
+            <h2 class="text-xs font-black text-teal-950 mb-3 flex items-center gap-2">
+                <span class="bg-teal-700 text-white w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold">١</span>
+                البيانات الأساسية للطالب
             </h2>
-            <div class="space-y-2">
+            <div class="space-y-3">
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-700 mb-0.5">اسم الطالب:</label>
-                    <input type="text" id="studentName" class="w-full p-1.5 border border-slate-300 rounded text-[11px] font-bold focus:border-teal-600 focus:outline-none" placeholder="الاسم رباعي..." required>
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1">اسم الطالب رباعياً:</label>
+                    <input type="text" id="studentName" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-bold focus:border-teal-600 focus:ring-1 focus:ring-teal-600 focus:outline-none transition-all" placeholder="اكتب اسمك الكامل كما هو مدون بالجامعة..." required>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-700 mb-0.5">نظام الدراسة:</label>
-                        <select id="enrollmentType" class="w-full p-1.5 border border-slate-300 rounded text-[11px] font-bold focus:border-teal-600 focus:outline-none">
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">نظام الدراسة:</label>
+                        <select id="enrollmentType" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-bold focus:border-teal-600 focus:outline-none bg-white">
                             <option value="انتظام">انتظام</option>
                             <option value="انتساب">انتساب</option>
                             <option value="انتساب موجه">انتساب موجه</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-700 mb-0.5">الفرقة المراد تعديلها:</label>
-                        <select id="academicYear" onchange="handleYearFilterChange()" class="w-full p-1.5 border border-slate-300 rounded text-[11px] font-bold focus:border-teal-600 focus:outline-none">
-                            <option value="all">كافة السنوات بالصورة</option>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">تعديل وعرض النتائج لـ:</label>
+                        <select id="academicYear" onchange="handleYearFilterChange()" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-bold focus:border-teal-600 focus:outline-none bg-white">
+                            <option value="all">كافة السنوات المكتشفة بالصورة</option>
                             <option value="y1">الفرقة الأولى</option>
                             <option value="y2">الفرقة الثانية</option>
                             <option value="y3">الفرقة الثالثة</option>
@@ -148,123 +163,119 @@
             </div>
         </div>
 
-        <!-- رفع الصورة والربط بذكاء جوجل الاصطناعي -->
-        <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 mb-3 no-print">
-            <h2 class="text-[10px] font-extrabold text-teal-950 mb-2 flex items-center gap-1">
-                <span class="bg-teal-700 text-white w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold">٢</span>
-                تحميل بيان الدرجات
+        <!-- الخطوة 2: رفع السجل وتفعيله بالذكاء الاصطناعي -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 no-print shadow-sm">
+            <h2 class="text-xs font-black text-teal-950 mb-3 flex items-center gap-2">
+                <span class="bg-teal-700 text-white w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold">٢</span>
+                تحميل بيان الدرجات الأكاديمي
             </h2>
             
-            <!-- تصميم جديد ومحسن لمنطقة رفع ومعاينة الصورة -->
-            <div id="uploadArea" class="border-2 border-dashed border-teal-400 rounded-xl p-4 text-center bg-teal-50 hover:bg-teal-100 cursor-pointer transition-all relative overflow-hidden" onclick="document.getElementById('gradeFileInput').click()">
+            <div id="uploadArea" class="border-2 border-dashed border-teal-400 rounded-xl p-5 text-center bg-teal-50/50 hover:bg-teal-50 cursor-pointer transition-all relative overflow-hidden" onclick="document.getElementById('gradeFileInput').click()">
                 <input type="file" id="gradeFileInput" class="hidden" accept="image/*" onchange="processSelectedFile(event)">
                 
-                <!-- الحالة الافتراضية قبل الرفع -->
                 <div id="uploadPlaceholder" class="flex flex-col items-center justify-center space-y-2">
-                    <svg class="w-10 h-10 text-teal-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    <svg class="w-12 h-12 text-teal-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                     </svg>
-                    <p class="text-[11px] font-bold text-teal-900">اضغط هنا لرفع صورة السجل الأكاديمي</p>
-                    <p class="text-[9px] font-semibold text-teal-700">يدعم الصور (JPG, PNG)</p>
+                    <p class="text-xs font-bold text-teal-900">اضغط هنا أو اسحب صورة السجل الأكاديمي</p>
+                    <p class="text-[10px] font-semibold text-teal-700">يدعم صيغ الصور المختلفة (JPG, PNG)</p>
                 </div>
 
-                <!-- حالة المعاينة بعد الرفع -->
                 <div id="previewContainer" class="hidden flex flex-col items-center justify-center">
                     <div class="relative group w-full flex justify-center">
-                        <img id="gradeImagePreview" class="max-h-32 rounded-lg shadow-md border-2 border-teal-500 object-contain" alt="معاينة">
-                        <div class="absolute inset-0 bg-teal-900/60 hidden group-hover:flex items-center justify-center rounded-lg transition-all">
-                            <span class="text-white text-[11px] font-bold flex items-center gap-1">
-                                🔄 تغيير الصورة
+                        <img id="gradeImagePreview" class="max-h-40 rounded-xl shadow-md border-2 border-teal-500 object-contain" alt="معاينة السجل الأكاديمي">
+                        <div class="absolute inset-0 bg-teal-950/75 hidden group-hover:flex items-center justify-center rounded-xl transition-all">
+                            <span class="text-white text-xs font-bold flex items-center gap-1.5">
+                                🔄 استبدال وتغيير الصورة
                             </span>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="mt-2.5">
-                <button type="button" onclick="runGeminiAiAnalysis()" class="w-full bg-teal-800 text-white font-bold py-2 px-3 rounded hover:bg-teal-900 transition-all text-[11px] flex items-center justify-center gap-1 shadow-sm">
-                    <span>✨ استخراج الدرجات بالذكاء الاصطناعي</span>
+            <div class="mt-3">
+                <button type="button" onclick="runGeminiAiAnalysis()" class="w-full bg-teal-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-900 active:scale-[0.98] transition-all text-xs flex items-center justify-center gap-2 shadow-md">
+                    <span>✨ استخراج وتحليل الدرجات بالذكاء الاصطناعي</span>
                 </button>
             </div>
         </div>
 
-        <!-- صندوق الإشعارات للهواتف -->
-        <div id="operationStatusBox" class="hidden p-2 rounded-lg text-[10px] font-bold text-center mb-3 no-print"></div>
+        <!-- صندوق حالة العمليات والتقدم -->
+        <div id="operationStatusBox" class="hidden p-3 rounded-lg text-xs font-bold text-center mb-4 no-print shadow-sm"></div>
 
-        <!-- لوحة التدقيق الحية وتعديل الدرجات المكتشفة -->
-        <div id="gradeVerificationPanel" class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 mb-3 no-print hidden">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-[10px] font-bold text-teal-950 flex items-center gap-1">
-                    <span class="bg-amber-600 text-white w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px]">★</span>
-                    مراجعة وتعديل الدرجات
+        <!-- خطوة 3: لوحة التحقق وتعديل البيانات يدوياً بعد الاستخراج -->
+        <div id="gradeVerificationPanel" class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 no-print shadow-sm hidden">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xs font-bold text-teal-950 flex items-center gap-1.5">
+                    <span class="bg-amber-600 text-white w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-bold">★</span>
+                    مراجعة وتأكيد الدرجات والسنوات
                 </h2>
             </div>
 
-            <!-- جدول التدقيق مخصص ومصغر بالكامل للهاتف لعدم الخروج عن الشاشة -->
-            <div class="overflow-x-auto rounded border border-slate-200 bg-white">
-                <table class="w-full text-[9px] text-right text-slate-700 border-collapse">
+            <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                <table class="w-full text-[11px] text-right text-slate-700 border-collapse">
                     <thead class="bg-teal-900 text-white">
                         <tr>
-                            <th class="p-1 text-center">تضمين</th>
-                            <th class="p-1">الفصل الدراسي</th>
-                            <th class="p-1 text-center">المكتسبة</th>
-                            <th class="p-1 text-center font-extrabold text-amber-300">العظمى</th>
+                            <th class="p-2 text-center w-12">تضمين</th>
+                            <th class="p-2">الترم/الفرقة الدراسية</th>
+                            <th class="p-2 text-center w-20">الدرجة المكتسبة</th>
+                            <th class="p-2 text-center w-20 font-extrabold text-amber-300">الدرجة العظمى</th>
                         </tr>
                     </thead>
                     <tbody id="verificationTableBody" class="divide-y divide-slate-100">
-                        <!-- تملأ ديناميكياً -->
+                        <!-- يتم ملؤها ديناميكياً بواسطة جافاسكربت -->
                     </tbody>
                 </table>
             </div>
 
-            <!-- ملخص الحساب الحي للوحة التدقيق مصغر للهاتف -->
-            <div class="grid grid-cols-3 gap-1 mt-2.5 p-1.5 bg-teal-50 border border-teal-200 rounded text-center">
+            <div class="grid grid-cols-3 gap-2 mt-3 p-2.5 bg-teal-50 border border-teal-200 rounded-lg text-center">
                 <div>
-                    <p class="text-[8px] text-teal-700 font-bold">المكتسبة</p>
-                    <p id="liveSumAcquired" class="text-xs font-black text-teal-950">0</p>
+                    <p class="text-[9px] text-teal-700 font-bold">مجموع المكتسبة</p>
+                    <p id="liveSumAcquired" class="text-sm font-black text-teal-950">0</p>
                 </div>
                 <div class="border-x border-teal-200">
-                    <p class="text-[8px] text-teal-700 font-bold">العظمى الكلية</p>
-                    <p id="liveSumMax" class="text-xs font-black text-teal-950">0</p>
+                    <p class="text-[9px] text-teal-700 font-bold">العظمى الإجمالية</p>
+                    <p id="liveSumMax" class="text-sm font-black text-teal-950">0</p>
                 </div>
                 <div>
-                    <p class="text-[8px] text-teal-700 font-bold">التقدير والنسبة</p>
-                    <p id="livePercentage" class="text-[9px] font-black text-teal-900">0%</p>
+                    <p class="text-[9px] text-teal-700 font-bold">التقدير والنسبة</p>
+                    <p id="livePercentage" class="text-[10px] font-black text-teal-900">0%</p>
                 </div>
             </div>
 
-            <div class="mt-2.5">
-                <button type="button" onclick="generateOfficialCertificate()" class="w-full bg-emerald-700 text-white font-bold py-1.5 px-3 rounded hover:bg-emerald-800 transition-all text-[11px]">
-                    🎓 إصدار شهادة الدرجات المعتمدة
+            <div class="mt-3">
+                <button type="button" onclick="generateOfficialCertificate()" class="w-full bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-emerald-800 active:scale-[0.98] transition-all text-xs shadow-md">
+                    🎓 إصدار شهادة الدرجات المعتمدة للتصدير
                 </button>
             </div>
         </div>
 
-        <!-- الشهادة المستخرجة الرسمية والجاهزة للطباعة والتصدير -->
-        <div id="officialCertificateBox" class="certificate-container hidden border-2 border-double border-teal-800 p-2.5 bg-white relative rounded mt-3 overflow-hidden">
-            <div class="absolute inset-0.5 border border-teal-900/10 pointer-events-none"></div>
+        <!-- الشهادة الأكاديمية الرسمية القابلة للطباعة والحفظ -->
+        <div id="officialCertificateBox" class="certificate-container hidden border-4 border-double border-teal-800 p-4 bg-white relative rounded-xl mt-4 shadow-lg overflow-hidden">
+            <div class="absolute inset-1 border border-teal-900/10 pointer-events-none rounded-lg"></div>
             
-            <div class="text-center mb-2.5">
-                <h3 class="text-[10px] font-bold text-teal-950 mb-0.5">جامعة الزقازيق - كلية التجارة</h3>
-                <h2 class="text-xs font-black text-teal-900 mb-1">بيان درجات وتقييم أكاديمي رسمي</h2>
-                <div class="h-[1px] w-16 bg-teal-800 mx-auto rounded mb-1"></div>
+            <div class="text-center mb-4">
+                <h3 class="text-[11px] font-bold text-teal-950 mb-0.5">جمهورية مصر العربية - جامعة الزقازيق</h3>
+                <h4 class="text-[10px] font-bold text-teal-900 mb-1">كلية التجارة - إدارة شؤون الطلاب</h4>
+                <h2 class="text-sm font-black text-teal-950 mb-1">بيان تقييم ودرجات أكاديمي رسمي</h2>
+                <div class="h-[2px] w-24 bg-teal-800 mx-auto rounded mb-2"></div>
             </div>
 
-            <div class="space-y-0.5 bg-slate-50 p-2 border border-slate-100 rounded text-[9px] font-bold text-slate-800 mb-2">
+            <div class="space-y-1 bg-slate-50 p-3 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 mb-3">
                 <p>اسم الطالب: <span id="certStudentName" class="text-teal-950 font-black"></span></p>
-                <p>نظام الدراسة: <span id="certEnrollmentType" class="text-teal-950 font-black"></span></p>
-                <p>السجل الأكاديمي: <span id="certAcademicYear" class="text-teal-950 font-black"></span></p>
+                <p>نظام القبول والدراسة: <span id="certEnrollmentType" class="text-teal-950 font-black"></span></p>
+                <p>السجل الأكاديمي النشط: <span id="certAcademicYear" class="text-teal-950 font-black"></span></p>
             </div>
 
-            <div class="overflow-x-auto rounded border border-teal-900/30">
-                <table class="w-full text-center border-collapse text-[9px] min-w-[240px]">
+            <div class="overflow-x-auto rounded-lg border border-teal-900/30">
+                <table class="w-full text-center border-collapse text-xs min-w-[280px]">
                     <thead>
-                        <tr class="bg-teal-950 text-white">
-                            <th class="border border-teal-900 p-1">البيان</th>
-                            <th class="border border-teal-900 p-1">العظمى</th>
-                            <th class="border border-teal-900 p-1">المكتسبة</th>
-                            <th class="border border-teal-900 p-1 text-amber-300">النسبة %</th>
-                            <th class="border border-teal-900 p-1">التقدير</th>
+                        <tr class="bg-teal-950 text-white text-[11px]">
+                            <th class="border border-teal-900 p-2 font-bold">البيان الدراسي</th>
+                            <th class="border border-teal-900 p-2 font-bold">الدرجة العظمى</th>
+                            <th class="border border-teal-900 p-2 font-bold">الدرجة المكتسبة</th>
+                            <th class="border border-teal-900 p-2 font-bold text-amber-300">النسبة %</th>
+                            <th class="border border-teal-900 p-2 font-bold">التقدير الأكاديمي</th>
                         </tr>
                     </thead>
                     <tbody id="certTableBody" class="bg-white">
@@ -273,42 +284,43 @@
                 </table>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 text-center mt-4 pt-2 border-t border-slate-100 text-[8px] font-bold text-slate-700">
+            <!-- توقيعات الاعتماد -->
+            <div class="grid grid-cols-2 gap-4 text-center mt-6 pt-4 border-t border-slate-200 text-[10px] font-bold text-slate-700">
                 <div>
-                    <p class="mb-2">شؤون الطلاب</p>
+                    <p class="mb-4">المراجع المالي والاداري</p>
                     <p class="text-slate-400">........................</p>
                 </div>
                 <div>
-                    <p class="mb-2">عميد الكلية</p>
+                    <p class="mb-4">عميد الكلية واعتماده</p>
                     <p class="text-slate-400">........................</p>
                 </div>
             </div>
 
-            <!-- أزرار التحكم بالشهادة -->
-            <div class="mt-4 flex gap-1.5 no-print">
-                <button type="button" onclick="window.print()" class="flex-1 bg-slate-800 text-white font-bold py-1 px-2 rounded hover:bg-slate-900 transition-all text-[10px]">
-                    🖨️ طباعة
+            <!-- أزرار تفاعل الشهادة -->
+            <div class="mt-5 flex flex-wrap gap-2 no-print">
+                <button type="button" onclick="window.print()" class="flex-1 bg-slate-800 text-white font-bold py-2 px-3 rounded-lg hover:bg-slate-900 active:scale-[0.98] transition-all text-xs">
+                    🖨️ طباعة الشهادة
                 </button>
-                <button id="saveCloudBtn" type="button" onclick="saveCertificateToFirebaseCloud()" class="flex-1 bg-emerald-600 text-white font-bold py-1 px-2 rounded hover:bg-emerald-700 transition-all text-[10px]">
-                    ☁️ حفظ سحابي
+                <button id="saveCloudBtn" type="button" onclick="saveCertificateToFirebaseCloud()" class="flex-1 bg-emerald-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-emerald-700 active:scale-[0.98] transition-all text-xs">
+                    ☁️ حفظ سحابي مؤرشف
                 </button>
-                <button type="button" onclick="resetApp()" class="flex-1 bg-rose-600 text-white font-bold py-1 px-2 rounded hover:bg-rose-700 transition-all text-[10px]">
-                    🔄 البدء من جديد
+                <button type="button" onclick="resetApp()" class="flex-1 bg-rose-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-rose-700 active:scale-[0.98] transition-all text-xs">
+                    🔄 تصفير البيانات
                 </button>
             </div>
         </div>
 
-        <!-- الأرشيف والشهادات السابقة مؤرشفة سحابياً للجوال -->
-        <div class="mt-4 border-t border-slate-200 pt-3 no-print" id="savedListHistoryPanel">
-            <h3 class="text-[10px] font-bold text-teal-950 mb-2 flex items-center gap-1">
-                📂 الشهادات المحفوظة سحابياً
+        <!-- السجل التاريخي للشهادات المحفوظة سحابياً -->
+        <div class="mt-5 border-t border-slate-200 pt-4 no-print" id="savedListHistoryPanel">
+            <h3 class="text-xs font-black text-teal-950 mb-3 flex items-center gap-1.5">
+                📁 الأرشيف السحابي للشهادات المرفوعة
             </h3>
-            <div class="space-y-1.5" id="savedCertificatesContainer">
-                <p class="text-slate-500 font-semibold italic text-[9px] text-center">جاري جلب الشهادات مؤرشفة سحابياً...</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="savedCertificatesContainer">
+                <p class="text-slate-500 font-semibold italic text-xs text-center w-full col-span-2 py-4">جاري جلب الشهادات السحابية المؤرشفة...</p>
             </div>
         </div>
 
-        <!-- الفوتر الأكاديمي الرسمي المذهب وبصمة المطور -->
+        <!-- حقوق التطوير والملكية الفكرية الرسمية -->
         <div class="mt-6 bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 text-slate-200 p-4 rounded-xl text-center space-y-2 no-print shadow-xl border border-amber-500/25 relative overflow-hidden">
             <div class="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
             
@@ -318,52 +330,48 @@
                 <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
             </div>
             
-            <p class="text-[12px] font-black text-white relative z-10">
+            <p class="text-[13px] font-black text-white relative z-10">
                 👨‍💻 تم التطوير بواسطة: شهاب طارق صلاح
             </p>
-            <p class="text-[9px] font-semibold text-slate-400 relative z-10">
+            <p class="text-[10px] font-semibold text-slate-400 relative z-10">
                 جميع الحقوق محفوظة © ٢٠٢٦ - كلية التجارة جامعة الزقازيق
             </p>
         </div>
 
     </div>
 
-    <!-- بدء أكواد الجافاسكريبت -->
     <script>
         let globalBase64Image = ""; 
         let verifiedGradesData = { acquiredTotal: 0, maxTotal: 0, percentage: 0, details: {} }; 
         let activeStructure = []; 
         
-        // مفتاح جوجل الجديد المعتمد (AQ.)
-        const apiKey = "AQ.Ab8RN6KxbTC1-LKbn3J8rAqx0e9_uXj5rQoL9dxY2mL8yackAg"; 
+        // مفتاح الـ API يترك فارغاً بناءً على قواعد الاستخدام الصارمة للمنصة ليتم حقنه تلقائياً من الخادم
+        const apiKey = ""; 
 
-        // الهيكل العام المفترض لترميز الفصول
         const masterStructure = [
-            { id: 'y1s1', year: 'y1', name: 'أولى - ترم 1', defaultMax: 500 },
-            { id: 'y1s2', year: 'y1', name: 'أولى - ترم 2', defaultMax: 500 },
-            { id: 'y1total', year: 'y1', name: 'مجموع الفرقة الأولى', isTotal: true },
+            { id: 'y1s1', year: 'y1', name: 'الفرقة الأولى - ترم 1', defaultMax: 500 },
+            { id: 'y1s2', year: 'y1', name: 'الفرقة الأولى - ترم 2', defaultMax: 500 },
+            { id: 'y1total', year: 'y1', name: 'مجموع الفرقة الأولى الكلي', isTotal: true },
             
-            { id: 'y2s1', year: 'y2', name: 'ثانية - ترم 1', defaultMax: 500 },
-            { id: 'y2s2', year: 'y2', name: 'ثانية - ترم 2', defaultMax: 500 },
-            { id: 'y2total', year: 'y2', name: 'مجموع الفرقة الثانية', isTotal: true },
+            { id: 'y2s1', year: 'y2', name: 'الفرقة الثانية - ترم 1', defaultMax: 500 },
+            { id: 'y2s2', year: 'y2', name: 'الفرقة الثانية - ترم 2', defaultMax: 500 },
+            { id: 'y2total', year: 'y2', name: 'مجموع الفرقة الثانية الكلي', isTotal: true },
             
-            { id: 'y3s1', year: 'y3', name: 'ثالثة - ترم 1', defaultMax: 500 },
-            { id: 'y3s2', year: 'y3', name: 'ثالثة - ترم 2', defaultMax: 500 },
-            { id: 'y3total', year: 'y3', name: 'مجموع الفرقة الثالثة', isTotal: true },
+            { id: 'y3s1', year: 'y3', name: 'الفرقة الثالثة - ترم 1', defaultMax: 500 },
+            { id: 'y3s2', year: 'y3', name: 'الفرقة الثالثة - ترم 2', defaultMax: 500 },
+            { id: 'y3total', year: 'y3', name: 'مجموع الفرقة الثالثة الكلي', isTotal: true },
             
-            { id: 'y4s1', year: 'y4', name: 'رابعة - ترم 1', defaultMax: 500 },
-            { id: 'y4s2', year: 'y4', name: 'رابعة - ترم 2', defaultMax: 500 },
-            { id: 'y4total', year: 'y4', name: 'مجموع الفرقة الرابعة', isTotal: true }
+            { id: 'y4s1', year: 'y4', name: 'الفرقة الرابعة - ترم 1', defaultMax: 500 },
+            { id: 'y4s2', year: 'y4', name: 'الفرقة الرابعة - ترم 2', defaultMax: 500 },
+            { id: 'y4total', year: 'y4', name: 'مجموع الفرقة الرابعة الكلي', isTotal: true }
         ];
 
-        // دالة البدء من جديد لتصفير الموقع بالكامل
         window.resetApp = function() {
             document.getElementById('studentName').value = "";
             document.getElementById('enrollmentType').value = "انتظام";
             document.getElementById('academicYear').value = "all";
             document.getElementById('gradeFileInput').value = "";
             
-            // إعادة ضبط منطقة رفع الصورة
             document.getElementById('uploadPlaceholder').classList.remove('hidden');
             document.getElementById('previewContainer').classList.add('hidden');
             document.getElementById('gradeImagePreview').src = "";
@@ -379,7 +387,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        // معايير تقديرات كلية التجارة
         function calculateGradeAppreciation(percentage) {
             if (percentage >= 90) return "ممتاز 🌟";
             if (percentage >= 80) return "جيد جداً 🟢";
@@ -401,7 +408,7 @@
 
         window.showCustomMessage = function(text, type = "loading") {
             const statusBox = document.getElementById('operationStatusBox');
-            statusBox.className = "p-2 rounded-lg text-[10px] font-bold text-center mb-3 no-print block shadow-sm";
+            statusBox.className = "p-3 rounded-lg text-xs font-bold text-center mb-4 no-print block shadow-sm";
             statusBox.innerText = text;
 
             if (type === "loading") {
@@ -413,7 +420,6 @@
             }
         };
 
-        // دالة معالجة الصورة وتغيير واجهة المعاينة
         window.processSelectedFile = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -423,7 +429,6 @@
                 const imgPreview = document.getElementById('gradeImagePreview');
                 imgPreview.src = e.target.result;
                 
-                // إخفاء الأيقونة الافتراضية وإظهار الصورة
                 document.getElementById('uploadPlaceholder').classList.add('hidden');
                 document.getElementById('previewContainer').classList.remove('hidden');
                 
@@ -440,7 +445,6 @@
 
         window.runGeminiAiAnalysis = async function() {
             const studentName = document.getElementById('studentName').value.trim();
-            const fileInput = document.getElementById('gradeFileInput');
 
             if (!studentName) {
                 showCustomMessage("⚠️ يرجى تعبئة اسم الطالب أولاً.", "error");
@@ -451,23 +455,19 @@
                 return;
             }
 
-            showCustomMessage("⏳ جاري تحليل واستخراج درجات السجل الأكاديمي بدقة متناهية...", "loading");
+            showCustomMessage("⏳ جاري تحليل السجل الأكاديمي عبر خوادم الموديل المتقدم (يرجى الانتظار)...", "loading");
             document.getElementById('officialCertificateBox').classList.add('hidden');
 
             const rawBase64 = globalBase64Image.split(',')[1];
             const mimeType = globalBase64Image.split(';')[0].split(':')[1] || 'image/jpeg';
 
-            const systemPrompt = `You are a highly precise OCR and academic transcript auditor system for Zagazig University.
-Your task is to extract total semester grades with 100% mathematical precision.
-DIRECTIONS:
-1. ONLY extract visible semesters. OMIT keys for missing/unclear semesters. Do not invent data.
-2. CRITICAL CALCULATION RULE:
-   - For each visible semester, locate the total score (المجموع الكلي للفصل).
-   - If the total score of the semester is printed directly in the image, extract it.
-   - If you must sum individual course grades: do it with absolute precision.
-   - You MUST EXCLUDE "Human Rights" (حقوق الإنسان) from both the acquired score and max score. For example, if a semester total is 500 (with 50 for Human Rights), the new max is 450, and you must subtract the student's score in Human Rights from their acquired total.
-3. Verify that the acquired score is mathematically logical and does not exceed the maximum score.
-4. Output strict raw JSON conforming to the schema.`;
+            // برومبت صارم وحسابي دقيق
+            const systemPrompt = `You are a highly precise OCR for Zagazig University transcripts in Arabic.
+CRITICAL RULES:
+1. Find the exact printed "المجموع" (Total Acquired) and the Max Total for each visible semester.
+2. Check if the subject "حقوق الإنسان" (Human Rights) is listed in that semester. If yes, extract its acquired score and max score.
+3. DO NOT DO ANY MATH OR SUBTRACTION. Just output the exact numbers printed on the paper.
+4. Output strict JSON. Omit keys for missing semesters.`;
 
             const payload = {
                 contents: [{
@@ -481,48 +481,82 @@ DIRECTIONS:
                     responseSchema: {
                         type: "OBJECT",
                         properties: {
-                            y1s1: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" } } },
-                            y1s2: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" } } },
-                            y2s1: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" } } },
-                            y2s2: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" } } },
-                            y3s1: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" } } },
-                            y3s2: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" } } },
-                            y4s1: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" } } },
-                            y4s2: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" } } }
+                            y1s1: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
+                            y1s2: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
+                            y2s1: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
+                            y2s2: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
+                            y3s1: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
+                            y3s2: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
+                            y4s1: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
+                            y4s2: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } }
                         }
                     }
                 }
             };
 
-            // ✅ إعادة استخدام موديل gemini-3.5-flash المتوافق مع مفاتيح AQ
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
+            // استخدام الموديل المدعوم في المنصة gemini-2.5-flash-preview-09-2025 مع مفتاح الـ API الفارغ
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            let retries = 5;
+            let result;
+            let success = false;
+            let delay = 1000;
+
+            while (retries > 0 && !success) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    result = await response.json();
+
+                    if (!response.ok) {
+                        retries--;
+                        if (retries === 0) throw new Error("سيرفرات الذكاء الاصطناعي مشغولة حالياً، يرجى المحاولة لاحقاً.");
+                        await new Promise(r => setTimeout(r, delay));
+                        delay *= 2; // الأس الأسي للانتظار
+                        continue;
+                    }
+                    
+                    success = true;
+                } catch (err) {
+                    retries--;
+                    if (retries === 0) {
+                        console.error("Gemini Failure:", err);
+                        showCustomMessage(`⚠️ فشل الاتصال بالذكاء الاصطناعي: ${err.message}`, "error");
+                        return;
+                    }
+                    await new Promise(r => setTimeout(r, delay));
+                    delay *= 2;
+                }
+            }
+
+            if (!success) return;
 
             try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.error?.message || "خطأ غير معروف من سيرفر جوجل");
-                }
-
                 const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (!textResponse) {
-                    throw new Error("جوجل لم ترجع أي بيانات (استجابة فارغة).");
-                }
+                if (!textResponse) throw new Error("لم ترجع خوادم التحليل أي بيانات متوافقة.");
 
                 const extractedGrades = JSON.parse(textResponse);
                 
                 activeStructure = [];
                 verifiedGradesData.details = {}; 
 
+                // حساب وتنقيب دقيق للدرجات مع استثناء مادة حقوق الإنسان
                 for (let key in extractedGrades) {
-                    if (extractedGrades[key] && extractedGrades[key].acquired !== undefined && extractedGrades[key].acquired !== null) {
-                        if (extractedGrades[key].acquired === 0 && !extractedGrades[key].max) continue;
+                    let termData = extractedGrades[key];
+                    if (termData && termData.acquired !== undefined && termData.acquired !== null) {
+                        if (termData.acquired === 0 && !termData.max) continue;
+
+                        let finalAcq = termData.acquired;
+                        let finalMax = termData.max || 500;
+
+                        if (termData.hr_acq) finalAcq -= termData.hr_acq;
+                        if (termData.hr_max) finalMax -= termData.hr_max;
 
                         const baseObj = masterStructure.find(item => item.id === key);
                         if (baseObj) {
@@ -530,13 +564,13 @@ DIRECTIONS:
                                 id: baseObj.id,
                                 year: baseObj.year,
                                 name: baseObj.name,
-                                defaultMax: extractedGrades[key].max || baseObj.defaultMax,
-                                acquired: extractedGrades[key].acquired
+                                defaultMax: finalMax,
+                                acquired: finalAcq
                             });
 
                             verifiedGradesData.details[baseObj.id] = {
-                                acquired: extractedGrades[key].acquired,
-                                max: extractedGrades[key].max || baseObj.defaultMax
+                                acquired: finalAcq,
+                                max: finalMax
                             };
                         }
                     }
@@ -545,15 +579,11 @@ DIRECTIONS:
                 document.getElementById('academicYear').value = 'all';
                 renderVerificationTable();
                 document.getElementById('gradeVerificationPanel').classList.remove('hidden');
-                showCustomMessage("🎉 تم الاستخراج بنجاح واستبعاد مادة حقوق الإنسان.", "success");
+                showCustomMessage("🎉 تم استخراج درجات السجل وحذف مادة حقوق الإنسان بنجاح تام!", "success");
 
             } catch (err) {
-                console.error("Gemini Error:", err);
-                showCustomMessage(`⚠️ فشل الذكاء الاصطناعي. السبب: ${err.message}`, "error");
-                activeStructure = [];
-                verifiedGradesData.details = {};
-                renderVerificationTable();
-                document.getElementById('gradeVerificationPanel').classList.remove('hidden');
+                console.error("Parsing Error:", err);
+                showCustomMessage(`⚠️ فشل تحليل استجابة السجل الأكاديمي. السبب: ${err.message}`, "error");
             }
         };
 
@@ -573,7 +603,7 @@ DIRECTIONS:
             }
 
             if (targetTerms.length === 0 && selectedYear === 'all') {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-2 text-center text-rose-700 font-bold text-[10px]">لم يتم اكتشاف درجات، يرجى تحديد الفرقة يدوياً من القائمة أعلاه.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-rose-700 font-bold text-xs">لم يتم الكشف عن بيانات درجات صالحة للتحليل بالصورة المرفوعة. يرجى إدخال درجات الفصول يدوياً.</td></tr>`;
                 calculateLiveValues();
                 return;
             }
@@ -592,15 +622,15 @@ DIRECTIONS:
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition-colors";
                 tr.innerHTML = `
-                    <td class="p-1 text-center">
-                        <input type="checkbox" id="check_${item.id}" ${isChecked ? 'checked' : ''} onchange="calculateLiveValues()" class="w-3.5 h-3.5 accent-teal-700 cursor-pointer">
+                    <td class="p-2 text-center">
+                        <input type="checkbox" id="check_${item.id}" ${isChecked ? 'checked' : ''} onchange="calculateLiveValues()" class="w-4 h-4 accent-teal-700 cursor-pointer">
                     </td>
-                    <td class="p-1 font-bold text-slate-800 text-[10px]">${item.name}</td>
-                    <td class="p-1 text-center">
-                        <input type="number" id="acquired_${item.id}" value="${currentAcquired}" oninput="calculateLiveValues()" class="w-12 p-1 border border-slate-300 rounded text-center font-bold text-[10px] focus:outline-none focus:border-teal-600" min="0" max="${currentMax}">
+                    <td class="p-2 font-bold text-slate-800 text-[11px]">${item.name}</td>
+                    <td class="p-2 text-center">
+                        <input type="number" id="acquired_${item.id}" value="${currentAcquired}" oninput="calculateLiveValues()" class="w-16 p-1 border border-slate-300 rounded text-center font-bold text-xs focus:outline-none focus:border-teal-600" min="0" max="${currentMax}">
                     </td>
-                    <td class="p-1 text-center">
-                        <input type="number" id="max_${item.id}" value="${currentMax}" oninput="calculateLiveValues()" class="w-12 p-1 border border-amber-300 bg-amber-50/30 rounded text-center font-black text-[10px] focus:outline-none" min="1">
+                    <td class="p-2 text-center">
+                        <input type="number" id="max_${item.id}" value="${currentMax}" oninput="calculateLiveValues()" class="w-16 p-1 border border-amber-300 bg-amber-50/30 rounded text-center font-black text-xs focus:outline-none" min="1">
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -695,22 +725,24 @@ DIRECTIONS:
 
             let accumulatedAcquired = 0;
             let accumulatedMax = 0;
+            let grandTotalAcquired = 0;
+            let grandTotalMax = 0;
 
             displayStructure.forEach(row => {
                 const tr = document.createElement('tr');
 
                 if (row.isTotal) {
-                    tr.className = "bg-teal-50 font-bold border border-teal-800 text-teal-950 text-[9px]";
+                    tr.className = "bg-teal-50 font-bold border border-teal-800 text-teal-950 text-xs";
                     const rawTotalPercent = accumulatedMax > 0 ? (accumulatedAcquired / accumulatedMax) * 100 : 0;
                     const totalPercent = formatPercentageSafely(rawTotalPercent);
                     
                     if (accumulatedMax > 0) {
                         tr.innerHTML = `
-                            <td class="border border-teal-900 p-1 font-black">${row.name}</td>
-                            <td class="border border-teal-900 p-1 font-black">${accumulatedMax}</td>
-                            <td class="border border-teal-900 p-1 font-black">${accumulatedAcquired}</td>
-                            <td class="border border-teal-900 p-1 font-black text-teal-900">${totalPercent}%</td>
-                            <td class="border border-teal-900 p-1 font-black text-teal-900">${calculateGradeAppreciation(totalPercent)}</td>
+                            <td class="border border-teal-900 p-2 font-black">${row.name}</td>
+                            <td class="border border-teal-900 p-2 font-black">${accumulatedMax}</td>
+                            <td class="border border-teal-900 p-2 font-black">${accumulatedAcquired}</td>
+                            <td class="border border-teal-900 p-2 font-black text-teal-900">${totalPercent}%</td>
+                            <td class="border border-teal-900 p-2 font-black text-teal-900">${calculateGradeAppreciation(totalPercent)}</td>
                         `;
                     }
                     accumulatedAcquired = 0;
@@ -726,13 +758,16 @@ DIRECTIONS:
 
                         accumulatedAcquired += acq;
                         accumulatedMax += max;
+                        
+                        grandTotalAcquired += acq;
+                        grandTotalMax += max;
 
                         tr.innerHTML = `
-                            <td class="border border-teal-900 p-1 font-semibold text-slate-900">${row.name}</td>
-                            <td class="border border-teal-900 p-1 font-bold text-amber-900">${max}</td>
-                            <td class="border border-teal-900 p-1">${acq}</td>
-                            <td class="border border-teal-900 p-1 text-teal-900 font-bold">${p}%</td>
-                            <td class="border border-teal-900 p-1 text-teal-900 font-bold">${calculateGradeAppreciation(p)}</td>
+                            <td class="border border-teal-900 p-2 font-semibold text-slate-900">${row.name}</td>
+                            <td class="border border-teal-900 p-2 font-bold text-amber-900">${max}</td>
+                            <td class="border border-teal-900 p-2">${acq}</td>
+                            <td class="border border-teal-900 p-2 text-teal-900 font-bold">${p}%</td>
+                            <td class="border border-teal-900 p-2 text-teal-900 font-bold">${calculateGradeAppreciation(p)}</td>
                         `;
                     }
                 }
@@ -741,16 +776,35 @@ DIRECTIONS:
                 }
             });
 
+            // إضافة صف المجموع التراكمي الشامل لكامل السنوات
+            if (grandTotalMax > 0 && aYear === 'all') {
+                const grandPercent = formatPercentageSafely((grandTotalAcquired / grandTotalMax) * 100);
+                const grandTr = document.createElement('tr');
+                grandTr.className = "bg-teal-900 text-white font-black text-xs border-t-2 border-teal-950";
+                grandTr.innerHTML = `
+                    <td class="border border-teal-950 p-2 text-amber-300">المجموع التراكمي الإجمالي</td>
+                    <td class="border border-teal-950 p-2 text-amber-300">${grandTotalMax}</td>
+                    <td class="border border-teal-950 p-2 text-amber-300">${grandTotalAcquired}</td>
+                    <td class="border border-teal-950 p-2 text-amber-300">${grandPercent}%</td>
+                    <td class="border border-teal-950 p-2 text-amber-300">${calculateGradeAppreciation(grandPercent)}</td>
+                `;
+                tbody.appendChild(grandTr);
+            }
+
             document.getElementById('officialCertificateBox').classList.remove('hidden');
-            window.scrollTo({
-                top: document.getElementById('officialCertificateBox').offsetTop,
-                behavior: 'smooth'
-            });
+            
+            // تمرير مريح للشهادة
+            setTimeout(() => {
+                document.getElementById('officialCertificateBox').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 100);
         };
 
         window.saveCertificateToFirebaseCloud = async function() {
             if (!window.currentUser) {
-                showCustomMessage("❌ لا يوجد اتصال فعال بالخادم السحابي.", "error");
+                showCustomMessage("❌ تعذر الاتصال ببيانات المستند السحابي الفعالة.", "error");
                 return;
             }
 
@@ -758,9 +812,10 @@ DIRECTIONS:
             const eType = document.getElementById('enrollmentType').value;
             const aYear = document.getElementById('academicYear').value;
 
-            showCustomMessage("☁️ جاري حفظ الشهادة سحابياً...", "loading");
+            showCustomMessage("☁️ جاري ترحيل الشهادة إلى الخادم السحابي...", "loading");
 
             try {
+                // استخدام الهيكل الصارم والقواعد المقررة بالمسار الحصري (القاعدة 1)
                 const docRef = doc(
                     window.db, 
                     'artifacts', 
@@ -782,11 +837,11 @@ DIRECTIONS:
                     userId: window.currentUser.uid
                 });
 
-                showCustomMessage("✅ تم حفظ وأرشفة الشهادة الأكاديمية بنجاح سحابياً!", "success");
+                showCustomMessage("✅ تم حفظ وأرشفة الشهادة بالخادم بنجاح!", "success");
 
             } catch (err) {
-                console.error("Firestore Error:", err);
-                showCustomMessage("❌ حدث خطأ أثناء الحفظ سحابياً. تأكد من إعدادات Firestore Rules.", "error");
+                console.error("Firestore Error Details:", err);
+                showCustomMessage("❌ فشل تخزين البيانات سحابياً بسبب صلاحيات الأمان والتحقق.", "error");
             }
         };
 
@@ -794,6 +849,7 @@ DIRECTIONS:
             if (!window.currentUser) return;
 
             try {
+                // استرجاع البيانات بالمسار المحدد سحابياً
                 const collectionRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'student_certificates');
                 
                 onSnapshot(collectionRef, (snapshot) => {
@@ -801,7 +857,7 @@ DIRECTIONS:
                     listContainer.innerHTML = "";
 
                     if (snapshot.empty) {
-                        listContainer.innerHTML = '<p class="text-slate-500 font-semibold italic text-[9px] text-center">لا توجد شهادات مؤرشفة حالياً.</p>';
+                        listContainer.innerHTML = '<p class="text-slate-500 font-semibold italic text-[11px] text-center col-span-2 py-4">الأرشيف السحابي فارغ، احفظ شهادتك لتظهر هنا.</p>';
                         return;
                     }
 
@@ -810,24 +866,22 @@ DIRECTIONS:
                         const dateStr = new Date(data.createdAt).toLocaleDateString('ar-EG');
                         
                         const card = document.createElement('div');
-                        card.className = "bg-white p-2 border border-slate-200 rounded shadow-sm flex flex-col hover:border-teal-600 transition-all cursor-pointer text-[10px]";
+                        card.className = "bg-slate-50 p-3 border border-slate-200 rounded-xl shadow-sm flex justify-between items-center hover:border-teal-600 transition-all text-xs";
                         card.innerHTML = `
-                            <div>
-                                <h4 class="font-bold text-teal-950">${data.studentName}</h4>
-                                <p class="text-[8px] text-slate-500 mt-0.5">النسبة: ${data.grades?.percentage}% | تاريخ: ${dateStr}</p>
+                            <div class="space-y-1">
+                                <h4 class="font-extrabold text-teal-950">${data.studentName}</h4>
+                                <p class="text-[10px] text-slate-500 font-bold">النسبة: ${data.grades?.percentage || 0}% | بتاريخ: ${dateStr}</p>
                             </div>
-                            <div class="mt-1">
-                                <button onclick="restoreCertificateFromCloud('${doc.id}', ${JSON.stringify(data).replace(/"/g, '&quot;')})" class="text-[8px] w-full bg-teal-800 text-white font-bold py-0.5 px-2 rounded hover:bg-teal-900 transition-all">📄 استرداد وعرض</button>
-                            </div>
+                            <button onclick="restoreCertificateFromCloud('${doc.id}', ${JSON.stringify(data).replace(/"/g, '&quot;')})" class="text-[10px] bg-teal-800 text-white font-extrabold py-1.5 px-3 rounded-lg hover:bg-teal-900 transition-all shadow-sm">📂 عرض واسترداد</button>
                         `;
                         listContainer.appendChild(card);
                     });
                 }, (error) => {
-                    console.error("Firestore Snapshot Failure:", error);
+                    console.error("Firestore Listener Failure:", error);
                 });
 
             } catch (error) {
-                console.error("Error loading certificates:", error);
+                console.error("Error setting dynamic snapshot:", error);
             }
         };
 
@@ -840,7 +894,6 @@ DIRECTIONS:
                 const imgPreview = document.getElementById('gradeImagePreview');
                 imgPreview.src = data.imageTextBase64;
                 
-                // تحديث واجهة المعاينة عند الاسترداد
                 document.getElementById('uploadPlaceholder').classList.add('hidden');
                 document.getElementById('previewContainer').classList.remove('hidden');
                 
@@ -856,8 +909,10 @@ DIRECTIONS:
             renderVerificationTable();
             generateOfficialCertificate();
             
-            showCustomMessage(`🔓 تم استرداد السجل بنجاح لـ: ${data.studentName}`, "success");
+            showCustomMessage(`🔓 تم جلب البيانات واسترداد التقرير بنجاح لـ: ${data.studentName}`, "success");
         };
     </script>
 </body>
 </html>
+
+```
