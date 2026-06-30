@@ -1,918 +1,372 @@
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <title>بوابة درجات الطلاب - تجارة الزقازيق</title>
-    <meta name="description" content="مستخرج الدرجات الذكي لتحليل وحساب التقديرات الأكاديمية تلقائياً لطلاب كلية التجارة جامعة الزقازيق.">
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/4035/4035105.png" type="image/png">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض تقديمي: الدخل والمصروفات</title>
+    <!-- استيراد خط قاهري احترافي للعروض التقديمية -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap');
-        
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: #f3f4f6;
-            -webkit-tap-highlight-color: transparent;
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            --slide-bg: #ffffff;
+            --primary-color: #1f2937; /* رمادي داكن رسمي */
+            --accent-silver: #9ca3af; /* فضي مكمل */
+            --text-main: #374151;
+            --text-muted: #4b5563;
+            --border-color: #d1d5db;
+            --income-color: #047857; /* أخضر خفيف للدخل */
+            --expense-color: #b91c1c; /* أحمر خفيف للمصروفات */
         }
 
-        /* تحسينات الطباعة للشهادة الأكاديمية */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+
+        /* تصميم الشريحة الرسمي كإطار محدد */
+        .slide {
+            background: var(--slide-bg);
+            width: 100%;
+            max-width: 960px;
+            min-height: 540px;
+            border: 3px solid var(--border-color);
+            border-radius: 12px;
+            padding: 50px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background-image: linear-gradient(to bottom, #ffffff 95%, #f9fafb 5%);
+        }
+
+        /* ترقيم الشرائح */
+        .slide-number {
+            position: absolute;
+            bottom: 20px;
+            left: 30px;
+            font-size: 14px;
+            color: var(--accent-silver);
+            font-weight: bold;
+        }
+
+        /* العناوين الرئيسية بحجم كبير وواضح */
+        h1.slide-title {
+            font-size: 42px;
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            border-bottom: 4px solid var(--accent-silver);
+            padding-bottom: 15px;
+            display: inline-block;
+        }
+
+        /* النصوص والتعريفات بخط كبير جداً وواضح بناءً على طلبك */
+        .definition-text {
+            font-size: 26px;
+            line-height: 1.8;
+            color: var(--text-main);
+            font-weight: 700;
+            text-align: justify;
+        }
+
+        .highlight {
+            color: var(--primary-color);
+            background: #f3f4f6;
+            padding: 2px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* تنسيق الهياكل والأمثلة المصورة */
+        .example-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+            align-items: center;
+        }
+
+        .example-card {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            background: #f9fafb;
+            text-align: center;
+        }
+
+        .example-card h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .example-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+
+        .image-caption {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+
+        /* شريحة مشغل الفيديو التمهيدي */
+        .video-container {
+            width: 100%;
+            height: 320px;
+            background: #111827;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #ffffff;
+            border: 2px solid var(--accent-silver);
+            position: relative;
+        }
+
+        .play-button {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: transform 0.2s;
+        }
+
+        .play-button:hover {
+            transform: scale(1.1);
+        }
+
+        /* اقتباس الخلاصة */
+        .quote-box {
+            border-right: 8px solid var(--primary-color);
+            background: #f3f4f6;
+            padding: 30px;
+            border-radius: 4px 12px 12px 4px;
+            font-size: 28px;
+            font-style: italic;
+            line-height: 1.7;
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        /* قائمة العناصر المنظمة */
+        .formal-list {
+            list-style: none;
+        }
+
+        .formal-list li {
+            font-size: 24px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-right: 6px solid var(--primary-color);
+            background: #f9fafb;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        /* إعدادات الطباعة لتحويل الملف إلى PDF أو بوربوينت بسهولة */
         @media print {
-            body { 
-                background: white; 
-                padding: 0; 
+            body {
+                background: none;
+                padding: 0;
+            }
+            .slide {
+                box-shadow: none;
+                border: 2px solid #000;
+                page-break-after: always;
                 margin: 0;
-            }
-            .no-print { 
-                display: none !important; 
-            }
-            .print-only { 
-                display: block !important; 
-            }
-            .certificate-container { 
-                border: 6px double #0f766e !important; 
-                padding: 24px !important; 
-                box-shadow: none !important; 
-                width: 100% !important; 
-                max-width: 100% !important; 
-                margin: 0 !important;
-                background: white !important;
-                color: black !important;
+                width: 100vw;
+                height: 100vh;
             }
         }
     </style>
-
-    <!-- Firebase SDK Modules -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // إعدادات Firebase من البيئة أو الإعدادات الافتراضية الممررة
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                apiKey: "AIzaSyCGYfEbMTtDNeYRTZy6RdhhnIoGbUyFqGQ",
-                authDomain: "natega-744b7.firebaseapp.com",
-                projectId: "natega-744b7",
-                storageBucket: "natega-744b7.firebasestorage.app",
-                messagingSenderId: "21967495472",
-                appId: "1:21967495472:web:e7af7c5853e2f43f22e8f5",
-                measurementId: "G-V98BVD61SS"
-            };
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'natega-744b7-app';
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // إتاحة الكائنات عالمياً للوصول إليها في السكربت العادي
-        window.db = db;
-        window.auth = auth;
-        window.appId = appId;
-
-        // المصادقة الآمنة حسب توجيهات المنصة (القاعدة 3)
-        async function runAuthSetup() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Firebase Auth Failure:", error);
-                showCustomMessage("⚠️ فشل الاتصال بخدمات التحقق السحابية.", "error");
-            }
-        }
-
-        onAuthStateChanged(auth, (user) => {
-            const statusBadge = document.getElementById('dbStatusBadge');
-            if (user) {
-                window.currentUser = user;
-                if (statusBadge) {
-                    statusBadge.innerHTML = "🟢 متصل سحابياً آمن";
-                    statusBadge.className = "bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-300 shadow-sm";
-                }
-                loadSavedCertificatesFromCloud(); 
-            } else {
-                window.currentUser = null;
-                if (statusBadge) {
-                    statusBadge.innerHTML = "🔴 غير متصل سحابياً";
-                    statusBadge.className = "bg-rose-100 text-rose-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-rose-300 shadow-sm";
-                }
-            }
-        });
-
-        runAuthSetup();
-    </script>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800 antialiased p-3 md:p-6">
+<body>
 
-    <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-xl p-4 md:p-6 relative border border-slate-200 overflow-hidden text-sm">
-        
-        <!-- الترويسة العلوية للمنظومة -->
-        <div class="flex justify-between items-center mb-5 no-print border-b border-slate-100 pb-3">
-            <div class="flex items-center gap-2">
-                <span class="text-xl">🎓</span>
-                <span class="text-xs font-black text-teal-900 tracking-wide">جامعة الزقازيق - كلية التجارة</span>
-            </div>
-            <span id="dbStatusBadge" class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2.5 py-1 rounded-full border border-amber-300">⏳ جاري الاتصال الآمن...</span>
+    <!-- الشريحة 1: المقدمة والفيديو -->
+    <div class="slide">
+        <h1 class="slide-title">مقدمة العرض التقديمي</h1>
+        <div class="video-container">
+            <div class="play-button">▶</div>
+            <p style="font-size: 20px; font-weight: bold;">[ فيديو تمهيدي: مفهوم المال والإدارة المالية ]</p>
         </div>
-
-        <div class="text-center mb-6 no-print">
-            <h1 class="text-xl font-black text-teal-950">مستخرج الدرجات الذكي</h1>
-            <p class="text-slate-500 text-xs mt-1">حلّل بيان درجاتك الأكاديمي، واحصل على تقرير فوري معتمد بدقة متناهية</p>
-        </div>
-
-        <!-- الخطوة 1: البيانات الشخصية -->
-        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 no-print shadow-sm">
-            <h2 class="text-xs font-black text-teal-950 mb-3 flex items-center gap-2">
-                <span class="bg-teal-700 text-white w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold">١</span>
-                البيانات الأساسية للطالب
-            </h2>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 mb-1">اسم الطالب رباعياً:</label>
-                    <input type="text" id="studentName" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-bold focus:border-teal-600 focus:ring-1 focus:ring-teal-600 focus:outline-none transition-all" placeholder="اكتب اسمك الكامل كما هو مدون بالجامعة..." required>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-700 mb-1">نظام الدراسة:</label>
-                        <select id="enrollmentType" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-bold focus:border-teal-600 focus:outline-none bg-white">
-                            <option value="انتظام">انتظام</option>
-                            <option value="انتساب">انتساب</option>
-                            <option value="انتساب موجه">انتساب موجه</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-700 mb-1">تعديل وعرض النتائج لـ:</label>
-                        <select id="academicYear" onchange="handleYearFilterChange()" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-bold focus:border-teal-600 focus:outline-none bg-white">
-                            <option value="all">كافة السنوات المكتشفة بالصورة</option>
-                            <option value="y1">الفرقة الأولى</option>
-                            <option value="y2">الفرقة الثانية</option>
-                            <option value="y3">الفرقة الثالثة</option>
-                            <option value="y4">الفرقة الرابعة</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- الخطوة 2: رفع السجل وتفعيله بالذكاء الاصطناعي -->
-        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 no-print shadow-sm">
-            <h2 class="text-xs font-black text-teal-950 mb-3 flex items-center gap-2">
-                <span class="bg-teal-700 text-white w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold">٢</span>
-                تحميل بيان الدرجات الأكاديمي
-            </h2>
-            
-            <div id="uploadArea" class="border-2 border-dashed border-teal-400 rounded-xl p-5 text-center bg-teal-50/50 hover:bg-teal-50 cursor-pointer transition-all relative overflow-hidden" onclick="document.getElementById('gradeFileInput').click()">
-                <input type="file" id="gradeFileInput" class="hidden" accept="image/*" onchange="processSelectedFile(event)">
-                
-                <div id="uploadPlaceholder" class="flex flex-col items-center justify-center space-y-2">
-                    <svg class="w-12 h-12 text-teal-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                    </svg>
-                    <p class="text-xs font-bold text-teal-900">اضغط هنا أو اسحب صورة السجل الأكاديمي</p>
-                    <p class="text-[10px] font-semibold text-teal-700">يدعم صيغ الصور المختلفة (JPG, PNG)</p>
-                </div>
-
-                <div id="previewContainer" class="hidden flex flex-col items-center justify-center">
-                    <div class="relative group w-full flex justify-center">
-                        <img id="gradeImagePreview" class="max-h-40 rounded-xl shadow-md border-2 border-teal-500 object-contain" alt="معاينة السجل الأكاديمي">
-                        <div class="absolute inset-0 bg-teal-950/75 hidden group-hover:flex items-center justify-center rounded-xl transition-all">
-                            <span class="text-white text-xs font-bold flex items-center gap-1.5">
-                                🔄 استبدال وتغيير الصورة
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mt-3">
-                <button type="button" onclick="runGeminiAiAnalysis()" class="w-full bg-teal-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-900 active:scale-[0.98] transition-all text-xs flex items-center justify-center gap-2 shadow-md">
-                    <span>✨ استخراج وتحليل الدرجات بالذكاء الاصطناعي</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- صندوق حالة العمليات والتقدم -->
-        <div id="operationStatusBox" class="hidden p-3 rounded-lg text-xs font-bold text-center mb-4 no-print shadow-sm"></div>
-
-        <!-- خطوة 3: لوحة التحقق وتعديل البيانات يدوياً بعد الاستخراج -->
-        <div id="gradeVerificationPanel" class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 no-print shadow-sm hidden">
-            <div class="flex justify-between items-center mb-3">
-                <h2 class="text-xs font-bold text-teal-950 flex items-center gap-1.5">
-                    <span class="bg-amber-600 text-white w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-bold">★</span>
-                    مراجعة وتأكيد الدرجات والسنوات
-                </h2>
-            </div>
-
-            <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-                <table class="w-full text-[11px] text-right text-slate-700 border-collapse">
-                    <thead class="bg-teal-900 text-white">
-                        <tr>
-                            <th class="p-2 text-center w-12">تضمين</th>
-                            <th class="p-2">الترم/الفرقة الدراسية</th>
-                            <th class="p-2 text-center w-20">الدرجة المكتسبة</th>
-                            <th class="p-2 text-center w-20 font-extrabold text-amber-300">الدرجة العظمى</th>
-                        </tr>
-                    </thead>
-                    <tbody id="verificationTableBody" class="divide-y divide-slate-100">
-                        <!-- يتم ملؤها ديناميكياً بواسطة جافاسكربت -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="grid grid-cols-3 gap-2 mt-3 p-2.5 bg-teal-50 border border-teal-200 rounded-lg text-center">
-                <div>
-                    <p class="text-[9px] text-teal-700 font-bold">مجموع المكتسبة</p>
-                    <p id="liveSumAcquired" class="text-sm font-black text-teal-950">0</p>
-                </div>
-                <div class="border-x border-teal-200">
-                    <p class="text-[9px] text-teal-700 font-bold">العظمى الإجمالية</p>
-                    <p id="liveSumMax" class="text-sm font-black text-teal-950">0</p>
-                </div>
-                <div>
-                    <p class="text-[9px] text-teal-700 font-bold">التقدير والنسبة</p>
-                    <p id="livePercentage" class="text-[10px] font-black text-teal-900">0%</p>
-                </div>
-            </div>
-
-            <div class="mt-3">
-                <button type="button" onclick="generateOfficialCertificate()" class="w-full bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-emerald-800 active:scale-[0.98] transition-all text-xs shadow-md">
-                    🎓 إصدار شهادة الدرجات المعتمدة للتصدير
-                </button>
-            </div>
-        </div>
-
-        <!-- الشهادة الأكاديمية الرسمية القابلة للطباعة والحفظ -->
-        <div id="officialCertificateBox" class="certificate-container hidden border-4 border-double border-teal-800 p-4 bg-white relative rounded-xl mt-4 shadow-lg overflow-hidden">
-            <div class="absolute inset-1 border border-teal-900/10 pointer-events-none rounded-lg"></div>
-            
-            <div class="text-center mb-4">
-                <h3 class="text-[11px] font-bold text-teal-950 mb-0.5">جمهورية مصر العربية - جامعة الزقازيق</h3>
-                <h4 class="text-[10px] font-bold text-teal-900 mb-1">كلية التجارة - إدارة شؤون الطلاب</h4>
-                <h2 class="text-sm font-black text-teal-950 mb-1">بيان تقييم ودرجات أكاديمي رسمي</h2>
-                <div class="h-[2px] w-24 bg-teal-800 mx-auto rounded mb-2"></div>
-            </div>
-
-            <div class="space-y-1 bg-slate-50 p-3 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 mb-3">
-                <p>اسم الطالب: <span id="certStudentName" class="text-teal-950 font-black"></span></p>
-                <p>نظام القبول والدراسة: <span id="certEnrollmentType" class="text-teal-950 font-black"></span></p>
-                <p>السجل الأكاديمي النشط: <span id="certAcademicYear" class="text-teal-950 font-black"></span></p>
-            </div>
-
-            <div class="overflow-x-auto rounded-lg border border-teal-900/30">
-                <table class="w-full text-center border-collapse text-xs min-w-[280px]">
-                    <thead>
-                        <tr class="bg-teal-950 text-white text-[11px]">
-                            <th class="border border-teal-900 p-2 font-bold">البيان الدراسي</th>
-                            <th class="border border-teal-900 p-2 font-bold">الدرجة العظمى</th>
-                            <th class="border border-teal-900 p-2 font-bold">الدرجة المكتسبة</th>
-                            <th class="border border-teal-900 p-2 font-bold text-amber-300">النسبة %</th>
-                            <th class="border border-teal-900 p-2 font-bold">التقدير الأكاديمي</th>
-                        </tr>
-                    </thead>
-                    <tbody id="certTableBody" class="bg-white">
-                        <!-- تملأ ديناميكياً -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- توقيعات الاعتماد -->
-            <div class="grid grid-cols-2 gap-4 text-center mt-6 pt-4 border-t border-slate-200 text-[10px] font-bold text-slate-700">
-                <div>
-                    <p class="mb-4">المراجع المالي والاداري</p>
-                    <p class="text-slate-400">........................</p>
-                </div>
-                <div>
-                    <p class="mb-4">عميد الكلية واعتماده</p>
-                    <p class="text-slate-400">........................</p>
-                </div>
-            </div>
-
-            <!-- أزرار تفاعل الشهادة -->
-            <div class="mt-5 flex flex-wrap gap-2 no-print">
-                <button type="button" onclick="window.print()" class="flex-1 bg-slate-800 text-white font-bold py-2 px-3 rounded-lg hover:bg-slate-900 active:scale-[0.98] transition-all text-xs">
-                    🖨️ طباعة الشهادة
-                </button>
-                <button id="saveCloudBtn" type="button" onclick="saveCertificateToFirebaseCloud()" class="flex-1 bg-emerald-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-emerald-700 active:scale-[0.98] transition-all text-xs">
-                    ☁️ حفظ سحابي مؤرشف
-                </button>
-                <button type="button" onclick="resetApp()" class="flex-1 bg-rose-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-rose-700 active:scale-[0.98] transition-all text-xs">
-                    🔄 تصفير البيانات
-                </button>
-            </div>
-        </div>
-
-        <!-- السجل التاريخي للشهادات المحفوظة سحابياً -->
-        <div class="mt-5 border-t border-slate-200 pt-4 no-print" id="savedListHistoryPanel">
-            <h3 class="text-xs font-black text-teal-950 mb-3 flex items-center gap-1.5">
-                📁 الأرشيف السحابي للشهادات المرفوعة
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="savedCertificatesContainer">
-                <p class="text-slate-500 font-semibold italic text-xs text-center w-full col-span-2 py-4">جاري جلب الشهادات السحابية المؤرشفة...</p>
-            </div>
-        </div>
-
-        <!-- حقوق التطوير والملكية الفكرية الرسمية -->
-        <div class="mt-6 bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 text-slate-200 p-4 rounded-xl text-center space-y-2 no-print shadow-xl border border-amber-500/25 relative overflow-hidden">
-            <div class="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-            
-            <div class="flex justify-center items-center gap-1.5 mb-1 relative z-10">
-                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                <p class="text-[10px] font-bold tracking-wider uppercase text-amber-400/90">بوابة التقييم الأكاديمي المعتمدة</p>
-                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-            </div>
-            
-            <p class="text-[13px] font-black text-white relative z-10">
-                👨‍💻 تم التطوير بواسطة: شهاب طارق صلاح
-            </p>
-            <p class="text-[10px] font-semibold text-slate-400 relative z-10">
-                جميع الحقوق محفوظة © ٢٠٢٦ - كلية التجارة جامعة الزقازيق
-            </p>
-        </div>
-
+        <div class="slide-number">الشريحة 1</div>
     </div>
 
-    <script>
-        let globalBase64Image = ""; 
-        let verifiedGradesData = { acquiredTotal: 0, maxTotal: 0, percentage: 0, details: {} }; 
-        let activeStructure = []; 
-        
-        // مفتاح الـ API يترك فارغاً بناءً على قواعد الاستخدام الصارمة للمنصة ليتم حقنه تلقائياً من الخادم
-        const apiKey = ""; 
+    <!-- الشريحة 2: تعريف الدخل -->
+    <div class="slide">
+        <h1 class="slide-title" style="color: var(--income-color);">ما هو الدخل؟</h1>
+        <p class="definition-text">
+            <span class="highlight">الدخل</span> هو كل الأموال التي يحصل عليها الفرد أو الأسرة أو الشركة خلال فترة زمنية معينة، سواء كانت هذه الأموال ناتجة عن العمل، أو الاستثمار، أو أي مصدر آخر.
+            <br><br>
+            ويُعد الدخل المصدر الأساسي الذي يعتمد عليه الشخص في تغطية احتياجاته اليومية مثل الطعام، والسكن، والتعليم، والرعاية الصحية، بالإضافة إلى الادخار والاستثمار.
+        </p>
+        <div class="slide-number">الشريحة 2</div>
+    </div>
+
+    <!-- الشريحة 3: قاعدة الدخل والاستقرار -->
+    <div class="slide">
+        <h1 class="slide-title">معادلة الاستقرار المالي</h1>
+        <p class="definition-text" style="text-align: center; font-size: 30px; margin-top: 20px;">
+            "كلما زاد الدخل مع <span class="highlight">حسن إدارة المصروفات</span>، زادت القدرة على تحقيق الاستقرار المالي وتحقيق الأهداف المستقبلية."
+        </p>
+        <div class="slide-number">الشريحة 3</div>
+    </div>
+
+    <!-- الشريحة 4: مصادر الدخل -->
+    <div class="slide">
+        <h1 class="slide-title">مصادر الدخل الأساسية</h1>
+        <div class="example-grid">
+            <div class="example-card">
+                <h3>1. عوائد الاستثمارات</h3>
+                <img class="example-image" src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=600&auto=format&fit=crop" alt="استثمارات وأرباح">
+                <p class="image-caption">نمو الأموال من خلال الاستثمار الذكي</p>
+            </div>
+            <div class="example-card">
+                <h3>2. إيجار العقارات</h3>
+                <img class="example-image" src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=600&auto=format&fit=crop" alt="عقارات وإيجار">
+                <p class="image-caption">العوائد الدورية المستمرة من الأصول العقارية</p>
+            </div>
+        </div>
+        <div class="slide-number">الشريحة 4</div>
+    </div>
+
+    <!-- الشريحة 5: الدخل الثابت -->
+    <div class="slide">
+        <h1 class="slide-title">أنواع الدخل | أولاً: الدخل الثابت</h1>
+        <p class="definition-text" style="margin-bottom: 30px;">
+            هو الدخل الذي يحصل عليه الشخص بشكل منتظم وبقيمة محددة، مثل الراتب الشهري. ويتميز بأنه يساعد على <span class="highlight">التخطيط للميزانية</span> لأنه معروف مسبقًا.
+        </p>
+        <div class="example-grid" style="grid-template-columns: 1fr; max-width: 500px; margin: 0 auto;">
+            <div class="example-card">
+                <h3>مثال: المعاش التقريزي أو الراتب</h3>
+                <img class="example-image" src="https://images.unsplash.com/photo-1591696205602-2f950c417cb9?q=80&w=600&auto=format&fit=crop" alt="المعاش والراتب الثابت">
+                <p class="image-caption">أمان مالي منتظم يسهل جدولة المصاريف بناءً عليه</p>
+            </div>
+        </div>
+        <div class="slide-number">الشريحة 5</div>
+    </div>
+
+    <!-- الشريحة 6: الدخل المتغير -->
+    <div class="slide">
+        <h1 class="slide-title">أنواع الدخل | ثانياً: الدخل المتغير</h1>
+        <p class="definition-text" style="margin-bottom: 30px;">
+            هو الدخل الذي تتغير قيمته من فترة لأخرى، فقد يزيد أو ينقص حسب طبيعة العمل أو حجم المبيعات أو الأرباح المحققة.
+        </p>
+        <div class="example-grid" style="grid-template-columns: 1fr; max-width: 500px; margin: 0 auto;">
+            <div class="example-card">
+                <h3>مثال: أرباح التجارة والمشاريع</h3>
+                <img class="example-image" src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=600&auto=format&fit=crop" alt="أرباح التجارة">
+                <p class="image-caption">تتفاوت القيمة صعوداً وهبوطاً بحسب حركة السوق وحجم المبيعات</p>
+            </div>
+        </div>
+        <div class="slide-number">الشريحة 6</div>
+    </div>
+
+    <!-- الشريحة 7: خلاصة جزء الدخل -->
+    <div class="slide">
+        <h1 class="slide-title">خلاصة إدارة الدخل</h1>
+        <div class="quote-box">
+            "يُعد الدخل أساس الحياة المالية، وكلما تنوعت مصادره وأُدير بطريقة صحيحة، زادت قدرة الفرد على تلبية احتياجاته وتحقيق أهدافه المالية."
+        </div>
+        <div class="slide-number">الشريحة 7</div>
+    </div>
+
+    <!-- الشريحة 8: تعريف المصروفات -->
+    <div class="slide">
+        <h1 class="slide-title" style="color: var(--expense-color);">ما هي المصروفات؟</h1>
+        <p class="definition-text">
+            <span class="highlight">المصروفات</span> هي جميع الأموال التي ينفقها الفرد أو الأسرة أو المؤسسة لتلبية الاحتياجات والرغبات المختلفة، سواء كانت ضرورية أو كمالية.
+            <br><br>
+            تنقسم هذه النفقات بشكل أساسي إلى نوعين رئيسيين يسهل من خلال فهمهما التحكم الكامل في الميزانية وتحقيق التوازن المالي المطلق.
+        </p>
+        <div class="slide-number">الشريحة 8</div>
+    </div>
+
+    <!-- الشريحة 9: المصروفات الثابتة -->
+    <div class="slide">
+        <h1 class="slide-title">المصروفات الثابتة</h1>
+        <p class="definition-text" style="margin-bottom: 20px;">
+            هي المصروفات التي يتم دفعها بشكل منتظم، وتكون قيمتها ثابتة أو لا تتغير كثيرًا من شهر لآخر، لذلك يمكن التخطيط لها مسبقًا وبدقة عالية.
+        </p>
+        <div class="example-grid">
+            <ul class="formal-list">
+                <li>إيجار المنزل والسكن</li>
+                <li>اشتراك الهاتف الخلوي</li>
+                <li>اشتراك الإنترنت المنزلي</li>
+                <li>أقساط القروض والالتزامات</li>
+            </ul>
+            <div class="example-card">
+                <img class="example-image" style="height: 180px;" src="https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?q=80&w=600&auto=format&fit=crop" alt="فواتير ثابتة">
+                <p class="image-caption">التزامات دورية حتمية ومعلومة القيمة مسبقاً</p>
+            </div>
+        </div>
+        <div class="slide-number">الشريحة 9</div>
+    </div>
+
+    <!-- الشريحة 10: المصروفات المتغيرة -->
+    <div class="slide">
+        <h1 class="slide-title">المصروفات المتغيرة</h1>
+        <p class="definition-text" style="margin-bottom: 20px;">
+            هي المصروفات التي تختلف قيمتها من شهر لآخر حسب احتياجات الشخص أو أسلوب حياته والظروف المحيطة، لذلك يصعب تحديدها مسبقاً بدقة تامة.
+        </p>
+        <div class="example-grid">
+            <ul class="formal-list" style="border-color: var(--accent-silver);">
+                <li>فاتورة المياه أو الكهرباء (حسب الاستهلاك)</li>
+                <li>شراء الملابس ومستلزمات المظهر</li>
+                <li>الهدايا والواجبات الاجتماعية</li>
+                <li>الترفيه وتناول الطعام خارج المنزل</li>
+            </ul>
+            <div class="example-card">
+                <img class="example-image" style="height: 180px;" src="https://images.unsplash.com/photo-1506084868230-bb9d95c24759?q=80&w=600&auto=format&fit=crop" alt="تسوق وترفيه">
+                <p class="image-caption">مرنة ويمكن التحكم فيها وتعديلها حسب الفائض المالي</p>
+            </div>
+        </div>
+        <div class="slide-number">الشريحة 10</div>
+    </div>
+
+    <!-- الشريحة 11: الخلاصة الختامية للعرض -->
+    <div class="slide">
+        <h1 class="slide-title">الاستنتاج المالي النهائي</h1>
+        <p class="definition-text" style="text-align: center; font-size: 32px; font-weight: 900; line-height: 2;">
+            "كلما عرفنا الفرق بين <span class="highlight" style="color: var(--income-color);">المصروفات الثابتة</span> و<span class="highlight" style="color: var(--expense-color);">المصروفات المتغيرة</span>...
+            <br>
+            أصبح من السهل <span class="highlight">إدارة أموالنا</span> وتحقيق الاستقرار المالي المستدام."
+        </p>
+        <div class="slide-number">الشريحة 11</div>
+    </div>
 
-        const masterStructure = [
-            { id: 'y1s1', year: 'y1', name: 'الفرقة الأولى - ترم 1', defaultMax: 500 },
-            { id: 'y1s2', year: 'y1', name: 'الفرقة الأولى - ترم 2', defaultMax: 500 },
-            { id: 'y1total', year: 'y1', name: 'مجموع الفرقة الأولى الكلي', isTotal: true },
-            
-            { id: 'y2s1', year: 'y2', name: 'الفرقة الثانية - ترم 1', defaultMax: 500 },
-            { id: 'y2s2', year: 'y2', name: 'الفرقة الثانية - ترم 2', defaultMax: 500 },
-            { id: 'y2total', year: 'y2', name: 'مجموع الفرقة الثانية الكلي', isTotal: true },
-            
-            { id: 'y3s1', year: 'y3', name: 'الفرقة الثالثة - ترم 1', defaultMax: 500 },
-            { id: 'y3s2', year: 'y3', name: 'الفرقة الثالثة - ترم 2', defaultMax: 500 },
-            { id: 'y3total', year: 'y3', name: 'مجموع الفرقة الثالثة الكلي', isTotal: true },
-            
-            { id: 'y4s1', year: 'y4', name: 'الفرقة الرابعة - ترم 1', defaultMax: 500 },
-            { id: 'y4s2', year: 'y4', name: 'الفرقة الرابعة - ترم 2', defaultMax: 500 },
-            { id: 'y4total', year: 'y4', name: 'مجموع الفرقة الرابعة الكلي', isTotal: true }
-        ];
-
-        window.resetApp = function() {
-            document.getElementById('studentName').value = "";
-            document.getElementById('enrollmentType').value = "انتظام";
-            document.getElementById('academicYear').value = "all";
-            document.getElementById('gradeFileInput').value = "";
-            
-            document.getElementById('uploadPlaceholder').classList.remove('hidden');
-            document.getElementById('previewContainer').classList.add('hidden');
-            document.getElementById('gradeImagePreview').src = "";
-            
-            globalBase64Image = "";
-            verifiedGradesData = { acquiredTotal: 0, maxTotal: 0, percentage: 0, details: {} };
-            activeStructure = [];
-            
-            document.getElementById('gradeVerificationPanel').classList.add('hidden');
-            document.getElementById('officialCertificateBox').classList.add('hidden');
-            document.getElementById('operationStatusBox').classList.add('hidden');
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-
-        function calculateGradeAppreciation(percentage) {
-            if (percentage >= 90) return "ممتاز 🌟";
-            if (percentage >= 80) return "جيد جداً 🟢";
-            if (percentage >= 65) return "جيد 🟡";
-            if (percentage >= 50) return "مقبول ⚪";
-            return "ضعيف 🔴";
-        }
-
-        function formatPercentageSafely(rawPercent) {
-            if (isNaN(rawPercent) || rawPercent <= 0) return 0;
-            const originalGrade = calculateGradeAppreciation(rawPercent);
-            let roundedVal = Math.round(rawPercent * 100) / 100;
-            const roundedGrade = calculateGradeAppreciation(roundedVal);
-            if (roundedGrade !== originalGrade && roundedVal > rawPercent) {
-                roundedVal = Math.floor(rawPercent * 100) / 100;
-            }
-            return roundedVal;
-        }
-
-        window.showCustomMessage = function(text, type = "loading") {
-            const statusBox = document.getElementById('operationStatusBox');
-            statusBox.className = "p-3 rounded-lg text-xs font-bold text-center mb-4 no-print block shadow-sm";
-            statusBox.innerText = text;
-
-            if (type === "loading") {
-                statusBox.classList.add("bg-amber-50", "text-amber-800", "border", "border-amber-200");
-            } else if (type === "error") {
-                statusBox.classList.add("bg-rose-50", "text-rose-800", "border", "border-rose-200");
-            } else if (type === "success") {
-                statusBox.classList.add("bg-emerald-50", "text-emerald-800", "border", "border-emerald-200");
-            }
-        };
-
-        window.processSelectedFile = function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imgPreview = document.getElementById('gradeImagePreview');
-                imgPreview.src = e.target.result;
-                
-                document.getElementById('uploadPlaceholder').classList.add('hidden');
-                document.getElementById('previewContainer').classList.remove('hidden');
-                
-                globalBase64Image = e.target.result; 
-            };
-            reader.readAsDataURL(file);
-        };
-
-        window.handleYearFilterChange = function() {
-            if (!document.getElementById('gradeVerificationPanel').classList.contains('hidden')) {
-                renderVerificationTable();
-            }
-        };
-
-        window.runGeminiAiAnalysis = async function() {
-            const studentName = document.getElementById('studentName').value.trim();
-
-            if (!studentName) {
-                showCustomMessage("⚠️ يرجى تعبئة اسم الطالب أولاً.", "error");
-                return;
-            }
-            if (!globalBase64Image) {
-                showCustomMessage("⚠️ يرجى رفع صورة بيان الدرجات.", "error");
-                return;
-            }
-
-            showCustomMessage("⏳ جاري تحليل السجل الأكاديمي عبر خوادم الموديل المتقدم (يرجى الانتظار)...", "loading");
-            document.getElementById('officialCertificateBox').classList.add('hidden');
-
-            const rawBase64 = globalBase64Image.split(',')[1];
-            const mimeType = globalBase64Image.split(';')[0].split(':')[1] || 'image/jpeg';
-
-            // برومبت صارم وحسابي دقيق
-            const systemPrompt = `You are a highly precise OCR for Zagazig University transcripts in Arabic.
-CRITICAL RULES:
-1. Find the exact printed "المجموع" (Total Acquired) and the Max Total for each visible semester.
-2. Check if the subject "حقوق الإنسان" (Human Rights) is listed in that semester. If yes, extract its acquired score and max score.
-3. DO NOT DO ANY MATH OR SUBTRACTION. Just output the exact numbers printed on the paper.
-4. Output strict JSON. Omit keys for missing semesters.`;
-
-            const payload = {
-                contents: [{
-                    parts: [
-                        { text: systemPrompt },
-                        { inlineData: { mimeType: mimeType, data: rawBase64 } }
-                    ]
-                }],
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            y1s1: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
-                            y1s2: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
-                            y2s1: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
-                            y2s2: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
-                            y3s1: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
-                            y3s2: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
-                            y4s1: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } },
-                            y4s2: { type: "OBJECT", properties: { acquired: { type: "NUMBER" }, max: { type: "NUMBER" }, hr_acq: { type: "NUMBER" }, hr_max: { type: "NUMBER" } } }
-                        }
-                    }
-                }
-            };
-
-            // استخدام الموديل المدعوم في المنصة gemini-2.5-flash-preview-09-2025 مع مفتاح الـ API الفارغ
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            
-            let retries = 5;
-            let result;
-            let success = false;
-            let delay = 1000;
-
-            while (retries > 0 && !success) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    result = await response.json();
-
-                    if (!response.ok) {
-                        retries--;
-                        if (retries === 0) throw new Error("سيرفرات الذكاء الاصطناعي مشغولة حالياً، يرجى المحاولة لاحقاً.");
-                        await new Promise(r => setTimeout(r, delay));
-                        delay *= 2; // الأس الأسي للانتظار
-                        continue;
-                    }
-                    
-                    success = true;
-                } catch (err) {
-                    retries--;
-                    if (retries === 0) {
-                        console.error("Gemini Failure:", err);
-                        showCustomMessage(`⚠️ فشل الاتصال بالذكاء الاصطناعي: ${err.message}`, "error");
-                        return;
-                    }
-                    await new Promise(r => setTimeout(r, delay));
-                    delay *= 2;
-                }
-            }
-
-            if (!success) return;
-
-            try {
-                const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (!textResponse) throw new Error("لم ترجع خوادم التحليل أي بيانات متوافقة.");
-
-                const extractedGrades = JSON.parse(textResponse);
-                
-                activeStructure = [];
-                verifiedGradesData.details = {}; 
-
-                // حساب وتنقيب دقيق للدرجات مع استثناء مادة حقوق الإنسان
-                for (let key in extractedGrades) {
-                    let termData = extractedGrades[key];
-                    if (termData && termData.acquired !== undefined && termData.acquired !== null) {
-                        if (termData.acquired === 0 && !termData.max) continue;
-
-                        let finalAcq = termData.acquired;
-                        let finalMax = termData.max || 500;
-
-                        if (termData.hr_acq) finalAcq -= termData.hr_acq;
-                        if (termData.hr_max) finalMax -= termData.hr_max;
-
-                        const baseObj = masterStructure.find(item => item.id === key);
-                        if (baseObj) {
-                            activeStructure.push({
-                                id: baseObj.id,
-                                year: baseObj.year,
-                                name: baseObj.name,
-                                defaultMax: finalMax,
-                                acquired: finalAcq
-                            });
-
-                            verifiedGradesData.details[baseObj.id] = {
-                                acquired: finalAcq,
-                                max: finalMax
-                            };
-                        }
-                    }
-                }
-
-                document.getElementById('academicYear').value = 'all';
-                renderVerificationTable();
-                document.getElementById('gradeVerificationPanel').classList.remove('hidden');
-                showCustomMessage("🎉 تم استخراج درجات السجل وحذف مادة حقوق الإنسان بنجاح تام!", "success");
-
-            } catch (err) {
-                console.error("Parsing Error:", err);
-                showCustomMessage(`⚠️ فشل تحليل استجابة السجل الأكاديمي. السبب: ${err.message}`, "error");
-            }
-        };
-
-        window.renderVerificationTable = function() {
-            const selectedYear = document.getElementById('academicYear').value;
-            const tbody = document.getElementById('verificationTableBody');
-            tbody.innerHTML = "";
-
-            let targetTerms = [];
-
-            if (selectedYear === 'all') {
-                targetTerms = masterStructure.filter(item => !item.isTotal).filter(item => {
-                    return verifiedGradesData.details[item.id];
-                });
-            } else {
-                targetTerms = masterStructure.filter(item => !item.isTotal && item.year === selectedYear);
-            }
-
-            if (targetTerms.length === 0 && selectedYear === 'all') {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-rose-700 font-bold text-xs">لم يتم الكشف عن بيانات درجات صالحة للتحليل بالصورة المرفوعة. يرجى إدخال درجات الفصول يدوياً.</td></tr>`;
-                calculateLiveValues();
-                return;
-            }
-
-            targetTerms.forEach(item => {
-                let currentAcquired = "";
-                let currentMax = item.defaultMax || 500;
-                let isChecked = false;
-
-                if (verifiedGradesData.details && verifiedGradesData.details[item.id]) {
-                    currentAcquired = verifiedGradesData.details[item.id].acquired;
-                    currentMax = verifiedGradesData.details[item.id].max;
-                    isChecked = true;
-                }
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition-colors";
-                tr.innerHTML = `
-                    <td class="p-2 text-center">
-                        <input type="checkbox" id="check_${item.id}" ${isChecked ? 'checked' : ''} onchange="calculateLiveValues()" class="w-4 h-4 accent-teal-700 cursor-pointer">
-                    </td>
-                    <td class="p-2 font-bold text-slate-800 text-[11px]">${item.name}</td>
-                    <td class="p-2 text-center">
-                        <input type="number" id="acquired_${item.id}" value="${currentAcquired}" oninput="calculateLiveValues()" class="w-16 p-1 border border-slate-300 rounded text-center font-bold text-xs focus:outline-none focus:border-teal-600" min="0" max="${currentMax}">
-                    </td>
-                    <td class="p-2 text-center">
-                        <input type="number" id="max_${item.id}" value="${currentMax}" oninput="calculateLiveValues()" class="w-16 p-1 border border-amber-300 bg-amber-50/30 rounded text-center font-black text-xs focus:outline-none" min="1">
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            calculateLiveValues();
-        };
-
-        window.calculateLiveValues = function() {
-            if (!verifiedGradesData.details) verifiedGradesData.details = {};
-
-            masterStructure.filter(item => !item.isTotal).forEach(item => {
-                const chk = document.getElementById(`check_${item.id}`);
-                const acqInput = document.getElementById(`acquired_${item.id}`);
-                const maxInput = document.getElementById(`max_${item.id}`);
-
-                if (chk) { 
-                    if (chk.checked && acqInput && maxInput) {
-                        verifiedGradesData.details[item.id] = {
-                            acquired: parseFloat(acqInput.value) || 0,
-                            max: parseFloat(maxInput.value) || 0
-                        };
-                    } else {
-                        delete verifiedGradesData.details[item.id];
-                    }
-                }
-            });
-
-            const selectedYear = document.getElementById('academicYear').value;
-            let sumAcquired = 0;
-            let sumMax = 0;
-
-            for (let key in verifiedGradesData.details) {
-                const term = masterStructure.find(m => m.id === key);
-                if (selectedYear === 'all' || (term && term.year === selectedYear)) {
-                    sumAcquired += verifiedGradesData.details[key].acquired;
-                    sumMax += verifiedGradesData.details[key].max;
-                }
-            }
-
-            const rawPercentage = sumMax > 0 ? (sumAcquired / sumMax) * 100 : 0;
-            const finalPercentage = formatPercentageSafely(rawPercentage);
-            
-            document.getElementById('liveSumAcquired').innerText = sumAcquired;
-            document.getElementById('liveSumMax').innerText = sumMax;
-            document.getElementById('livePercentage').innerText = `${finalPercentage}% (${calculateGradeAppreciation(finalPercentage)})`;
-
-            let totalAcqAll = 0, totalMaxAll = 0;
-            for (let key in verifiedGradesData.details) {
-                totalAcqAll += verifiedGradesData.details[key].acquired;
-                totalMaxAll += verifiedGradesData.details[key].max;
-            }
-            verifiedGradesData.acquiredTotal = totalAcqAll;
-            verifiedGradesData.maxTotal = totalMaxAll;
-            verifiedGradesData.percentage = formatPercentageSafely(totalMaxAll > 0 ? (totalAcqAll/totalMaxAll)*100 : 0);
-        };
-
-        window.generateOfficialCertificate = function() {
-            const sName = document.getElementById('studentName').value.trim();
-            const eType = document.getElementById('enrollmentType').value;
-            const aYear = document.getElementById('academicYear').value;
-
-            document.getElementById('certStudentName').innerText = sName;
-            document.getElementById('certEnrollmentType').innerText = eType;
-            
-            const yearSelect = document.getElementById('academicYear');
-            document.getElementById('certAcademicYear').innerText = yearSelect.options[yearSelect.selectedIndex].text;
-
-            const tbody = document.getElementById('certTableBody');
-            tbody.innerHTML = "";
-
-            let displayStructure = [];
-            masterStructure.filter(item => !item.isTotal).forEach(term => {
-                if (verifiedGradesData.details[term.id]) {
-                    displayStructure.push(term);
-                }
-            });
-
-            const activeYears = [...new Set(displayStructure.map(item => item.year))];
-            activeYears.forEach(y => {
-                const totalObj = masterStructure.find(item => item.year === y && item.isTotal);
-                if (totalObj) displayStructure.push(totalObj);
-            });
-
-            displayStructure.sort((a, b) => {
-                return masterStructure.findIndex(m => m.id === a.id) - masterStructure.findIndex(m => m.id === b.id);
-            });
-
-            if (aYear !== 'all') {
-                displayStructure = displayStructure.filter(row => row.year === aYear);
-            }
-
-            let accumulatedAcquired = 0;
-            let accumulatedMax = 0;
-            let grandTotalAcquired = 0;
-            let grandTotalMax = 0;
-
-            displayStructure.forEach(row => {
-                const tr = document.createElement('tr');
-
-                if (row.isTotal) {
-                    tr.className = "bg-teal-50 font-bold border border-teal-800 text-teal-950 text-xs";
-                    const rawTotalPercent = accumulatedMax > 0 ? (accumulatedAcquired / accumulatedMax) * 100 : 0;
-                    const totalPercent = formatPercentageSafely(rawTotalPercent);
-                    
-                    if (accumulatedMax > 0) {
-                        tr.innerHTML = `
-                            <td class="border border-teal-900 p-2 font-black">${row.name}</td>
-                            <td class="border border-teal-900 p-2 font-black">${accumulatedMax}</td>
-                            <td class="border border-teal-900 p-2 font-black">${accumulatedAcquired}</td>
-                            <td class="border border-teal-900 p-2 font-black text-teal-900">${totalPercent}%</td>
-                            <td class="border border-teal-900 p-2 font-black text-teal-900">${calculateGradeAppreciation(totalPercent)}</td>
-                        `;
-                    }
-                    accumulatedAcquired = 0;
-                    accumulatedMax = 0;
-                } else {
-                    const record = verifiedGradesData.details[row.id];
-                    if (record) {
-                        const acq = record.acquired;
-                        const max = record.max;
-                        
-                        const rawSinglePercent = (acq / max) * 100;
-                        const p = formatPercentageSafely(rawSinglePercent);
-
-                        accumulatedAcquired += acq;
-                        accumulatedMax += max;
-                        
-                        grandTotalAcquired += acq;
-                        grandTotalMax += max;
-
-                        tr.innerHTML = `
-                            <td class="border border-teal-900 p-2 font-semibold text-slate-900">${row.name}</td>
-                            <td class="border border-teal-900 p-2 font-bold text-amber-900">${max}</td>
-                            <td class="border border-teal-900 p-2">${acq}</td>
-                            <td class="border border-teal-900 p-2 text-teal-900 font-bold">${p}%</td>
-                            <td class="border border-teal-900 p-2 text-teal-900 font-bold">${calculateGradeAppreciation(p)}</td>
-                        `;
-                    }
-                }
-                if (tr.innerHTML !== "") {
-                    tbody.appendChild(tr);
-                }
-            });
-
-            // إضافة صف المجموع التراكمي الشامل لكامل السنوات
-            if (grandTotalMax > 0 && aYear === 'all') {
-                const grandPercent = formatPercentageSafely((grandTotalAcquired / grandTotalMax) * 100);
-                const grandTr = document.createElement('tr');
-                grandTr.className = "bg-teal-900 text-white font-black text-xs border-t-2 border-teal-950";
-                grandTr.innerHTML = `
-                    <td class="border border-teal-950 p-2 text-amber-300">المجموع التراكمي الإجمالي</td>
-                    <td class="border border-teal-950 p-2 text-amber-300">${grandTotalMax}</td>
-                    <td class="border border-teal-950 p-2 text-amber-300">${grandTotalAcquired}</td>
-                    <td class="border border-teal-950 p-2 text-amber-300">${grandPercent}%</td>
-                    <td class="border border-teal-950 p-2 text-amber-300">${calculateGradeAppreciation(grandPercent)}</td>
-                `;
-                tbody.appendChild(grandTr);
-            }
-
-            document.getElementById('officialCertificateBox').classList.remove('hidden');
-            
-            // تمرير مريح للشهادة
-            setTimeout(() => {
-                document.getElementById('officialCertificateBox').scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }, 100);
-        };
-
-        window.saveCertificateToFirebaseCloud = async function() {
-            if (!window.currentUser) {
-                showCustomMessage("❌ تعذر الاتصال ببيانات المستند السحابي الفعالة.", "error");
-                return;
-            }
-
-            const sName = document.getElementById('studentName').value.trim();
-            const eType = document.getElementById('enrollmentType').value;
-            const aYear = document.getElementById('academicYear').value;
-
-            showCustomMessage("☁️ جاري ترحيل الشهادة إلى الخادم السحابي...", "loading");
-
-            try {
-                // استخدام الهيكل الصارم والقواعد المقررة بالمسار الحصري (القاعدة 1)
-                const docRef = doc(
-                    window.db, 
-                    'artifacts', 
-                    window.appId, 
-                    'public', 
-                    'data', 
-                    'student_certificates', 
-                    `cert_${Date.now()}`
-                );
-
-                await setDoc(docRef, {
-                    studentName: sName,
-                    enrollmentType: eType,
-                    academicYear: aYear,
-                    grades: verifiedGradesData,
-                    activeStructure: activeStructure, 
-                    imageTextBase64: globalBase64Image,
-                    createdAt: new Date().toISOString(),
-                    userId: window.currentUser.uid
-                });
-
-                showCustomMessage("✅ تم حفظ وأرشفة الشهادة بالخادم بنجاح!", "success");
-
-            } catch (err) {
-                console.error("Firestore Error Details:", err);
-                showCustomMessage("❌ فشل تخزين البيانات سحابياً بسبب صلاحيات الأمان والتحقق.", "error");
-            }
-        };
-
-        window.loadSavedCertificatesFromCloud = function() {
-            if (!window.currentUser) return;
-
-            try {
-                // استرجاع البيانات بالمسار المحدد سحابياً
-                const collectionRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'student_certificates');
-                
-                onSnapshot(collectionRef, (snapshot) => {
-                    const listContainer = document.getElementById('savedCertificatesContainer');
-                    listContainer.innerHTML = "";
-
-                    if (snapshot.empty) {
-                        listContainer.innerHTML = '<p class="text-slate-500 font-semibold italic text-[11px] text-center col-span-2 py-4">الأرشيف السحابي فارغ، احفظ شهادتك لتظهر هنا.</p>';
-                        return;
-                    }
-
-                    snapshot.forEach((doc) => {
-                        const data = doc.data();
-                        const dateStr = new Date(data.createdAt).toLocaleDateString('ar-EG');
-                        
-                        const card = document.createElement('div');
-                        card.className = "bg-slate-50 p-3 border border-slate-200 rounded-xl shadow-sm flex justify-between items-center hover:border-teal-600 transition-all text-xs";
-                        card.innerHTML = `
-                            <div class="space-y-1">
-                                <h4 class="font-extrabold text-teal-950">${data.studentName}</h4>
-                                <p class="text-[10px] text-slate-500 font-bold">النسبة: ${data.grades?.percentage || 0}% | بتاريخ: ${dateStr}</p>
-                            </div>
-                            <button onclick="restoreCertificateFromCloud('${doc.id}', ${JSON.stringify(data).replace(/"/g, '&quot;')})" class="text-[10px] bg-teal-800 text-white font-extrabold py-1.5 px-3 rounded-lg hover:bg-teal-900 transition-all shadow-sm">📂 عرض واسترداد</button>
-                        `;
-                        listContainer.appendChild(card);
-                    });
-                }, (error) => {
-                    console.error("Firestore Listener Failure:", error);
-                });
-
-            } catch (error) {
-                console.error("Error setting dynamic snapshot:", error);
-            }
-        };
-
-        window.restoreCertificateFromCloud = function(id, data) {
-            document.getElementById('studentName').value = data.studentName;
-            document.getElementById('enrollmentType').value = data.enrollmentType;
-            document.getElementById('academicYear').value = data.academicYear;
-            
-            if (data.imageTextBase64) {
-                const imgPreview = document.getElementById('gradeImagePreview');
-                imgPreview.src = data.imageTextBase64;
-                
-                document.getElementById('uploadPlaceholder').classList.add('hidden');
-                document.getElementById('previewContainer').classList.remove('hidden');
-                
-                globalBase64Image = data.imageTextBase64;
-            }
-
-            verifiedGradesData = data.grades;
-            if (!verifiedGradesData.details) verifiedGradesData.details = {}; 
-            
-            activeStructure = data.activeStructure || []; 
-            
-            document.getElementById('gradeVerificationPanel').classList.remove('hidden');
-            renderVerificationTable();
-            generateOfficialCertificate();
-            
-            showCustomMessage(`🔓 تم جلب البيانات واسترداد التقرير بنجاح لـ: ${data.studentName}`, "success");
-        };
-    </script>
 </body>
 </html>
-
-```
