@@ -44,7 +44,6 @@
         @font-face { font-family: 'Cairo'; font-style: normal; font-weight: 700; src: local('Cairo'), url('./assets/fonts/cairo-bold.woff2') format('woff2'); font-display: block; }
         @font-face { font-family: 'Cairo'; font-style: normal; font-weight: 900; src: local('Cairo'), url('./assets/fonts/cairo-black.woff2') format('woff2'); font-display: block; }
 
-        /* منع تحديد النصوص ليعطي إحساس تطبيق حقيقي */
         body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; overflow-x: hidden; user-select: none; -webkit-user-select: none; }
         input, textarea, select { user-select: auto; -webkit-user-select: auto; }
         
@@ -66,7 +65,6 @@
 <body class="text-slate-800 bg-slate-50">
 
     <div id="root">
-        <!-- شاشة التحميل الوهمية (Splash Screen) -->
         <div style="height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #312e81;">
             <div style="width: 50px; height: 50px; border: 4px solid #fff; border-top: 4px solid #f59e0b; border-radius: 50%; animation: spin 1s linear infinite;"></div>
             <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
@@ -194,7 +192,7 @@
             return html`<div ref=${adRef} className=${`ad-container w-full ${hasAd ? 'my-6 py-4 bg-slate-50 border' : 'h-0 overflow-hidden'}`}></div>`;
         });
 
-        const SectionView = React.memo(({ type, title, icon, data, teachers = [], hideYearFilter = false, showSystemFilter = false, onBack, onPreviewSingle, onRequestDownload, initialFilters, showToast, highlightedItemId, isLoading }) => {
+        const SectionView = React.memo(({ type, title, icon, data, teachers = [], unlockedTeachers = [], hideYearFilter = false, showSystemFilter = false, onBack, onPreviewSingle, onRequestDownload, initialFilters, showToast, highlightedItemId, isLoading }) => {
             const[filterYear, setFilterYear] = useState(initialFilters?.year || 'اختار الصف');
             const[filterSystem, setFilterSystem] = useState(initialFilters?.system || 'اختار الشعبة'); 
             const[filterTeacher, setFilterTeacher] = useState(initialFilters?.teacherId || 'اختار المعلم');
@@ -202,6 +200,14 @@
             const[openDropdown, setOpenDropdown] = useState(null);
             const dropdownRef = useRef(null);
             const loaderRef = useRef(null);
+
+            const isSubscribed = Array.isArray(unlockedTeachers) && unlockedTeachers.length > 0;
+
+            const subscribedTeachers = useMemo(() => {
+                if (!Array.isArray(teachers)) return [];
+                if (!isSubscribed) return teachers;
+                return teachers.filter(t => unlockedTeachers.includes(t.uid));
+            }, [teachers, unlockedTeachers, isSubscribed]);
 
             useEffect(() => {
                 const handleClickOutside = (event) => { if (dropdownRef.current && !dropdownRef.current.contains(event.target)) setOpenDropdown(null); };
@@ -220,13 +226,16 @@
 
             const filtered = useMemo(() => {
                 return data.filter(item => {
+                    if (isSubscribed) {
+                        return filterTeacher === 'اختار المعلم' || item.teacherId === filterTeacher;
+                    }
                     const matchYear = hideYearFilter || filterYear === 'اختار الصف' || item.year === filterYear || item.year === 'عام';
                     const itemSystem = item.studySystem || 'عام';
                     const matchSystem = !showSystemFilter || filterSystem === 'اختار الشعبة' || itemSystem === 'عام' || itemSystem === filterSystem;
                     const matchTeacher = filterTeacher === 'اختار المعلم' || item.teacherId === filterTeacher;
                     return matchYear && matchSystem && matchTeacher;
                 });
-            },[data, filterYear, filterSystem, filterTeacher, hideYearFilter, showSystemFilter]);
+            },[data, filterYear, filterSystem, filterTeacher, hideYearFilter, showSystemFilter, isSubscribed]);
 
             useEffect(() => {
                 if(highlightedItemId) {
@@ -298,21 +307,21 @@
                                 <i className="fa-solid fa-share-nodes text-[10px] md:text-xs"></i>
                             </button>
 
-                            ${type !== 'activities' && Array.isArray(teachers) && teachers.length > 0 && html`
+                            ${type !== 'activities' && subscribedTeachers.length > 0 && html`
                                 <div className="relative">
                                     <button onClick=${() => setOpenDropdown(openDropdown === 'teacher' ? null : 'teacher')} className="flex items-center gap-1.5 bg-amber-500 text-indigo-950 text-[9px] md:text-[10px] font-black rounded-md px-2.5 py-1.5 outline-none cursor-pointer shadow-sm border border-amber-400 hover:bg-amber-400">
-                                        ${filterTeacher === 'اختار المعلم' ? 'المعلم' : ((Array.isArray(teachers) && teachers.find(t => t.uid === filterTeacher)?.name) || 'المعلم')} <i className=${`fa-solid fa-chevron-down text-[8px] ${openDropdown === 'teacher' ? 'rotate-180' : ''}`}></i>
+                                        ${filterTeacher === 'اختار المعلم' ? 'المعلم' : ((Array.isArray(subscribedTeachers) && subscribedTeachers.find(t => t.uid === filterTeacher)?.name) || 'المعلم')} <i className=${`fa-solid fa-chevron-down text-[8px] ${openDropdown === 'teacher' ? 'rotate-180' : ''}`}></i>
                                     </button>
                                     ${openDropdown === 'teacher' && html`
-                                        <div className="absolute top-full mt-1 right-0 w-36 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden max-h-48 overflow-y-auto">
+                                        <div className="absolute top-full mt-1 left-0 w-36 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden max-h-48 overflow-y-auto">
                                             <div onClick=${() => { setFilterTeacher('اختار المعلم'); setVisibleCount(6); setOpenDropdown(null); }} className=${`px-3 py-2 text-[10px] font-bold cursor-pointer border-b border-slate-50 hover:bg-slate-50 ${filterTeacher === 'اختار المعلم' ? 'bg-indigo-50 text-indigo-900' : 'text-slate-700'}`}>الكل</div>
-                                            ${Array.isArray(teachers) && teachers.map(t => html`<div key=${t.uid} onClick=${() => { setFilterTeacher(t.uid); setVisibleCount(6); setOpenDropdown(null); }} className=${`px-3 py-2 text-[10px] font-bold cursor-pointer border-b border-slate-50 hover:bg-slate-50 last:border-0 ${filterTeacher === t.uid ? 'bg-indigo-50 text-indigo-900' : 'text-slate-700'}`}>${t.name}</div>`)}
+                                            ${Array.isArray(subscribedTeachers) && subscribedTeachers.map(t => html`<div key=${t.uid} onClick=${() => { setFilterTeacher(t.uid); setVisibleCount(6); setOpenDropdown(null); }} className=${`px-3 py-2 text-[10px] font-bold cursor-pointer border-b border-slate-50 hover:bg-slate-50 last:border-0 ${filterTeacher === t.uid ? 'bg-indigo-50 text-indigo-900' : 'text-slate-700'}`}>${t.name}</div>`)}
                                         </div>
                                     `}
                                 </div>
                             `}
 
-                            ${(!hideYearFilter || showSystemFilter) && html`
+                            ${!isSubscribed && (!hideYearFilter || showSystemFilter) && html`
                                 <${React.Fragment}>
                                     ${!hideYearFilter && html`
                                         <div className="relative">
@@ -456,65 +465,47 @@
             `;
         });
 
-        const TeachersSlider = React.memo(({ teachers, unlockedTeachers, onTeacherClick }) => {
+        const TeachersSlider = React.memo(({ teachers, unlockedTeachers, onTeacherClick, onNavigateMore }) => {
             if (!Array.isArray(teachers) || teachers.length === 0) return null;
 
+            const homeTeachers = teachers.slice(0, 5);
+
             return html`
-                <div className="space-y-3">
+                <div className="space-y-4">
                     <div className="flex items-center gap-2 border-r-4 border-amber-400 pr-2">
                         <h3 className="font-black text-xs md:text-sm text-slate-800">نخبة معلمي المنصة</h3>
                         <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${teachers.length}</span>
                     </div>
                     
-                    <div className="flex gap-4 overflow-x-auto pb-4 pt-1 px-1 scrollbar-thin scrollbar-thumb-slate-200 hide-scrollbar snap-x snap-mandatory">
-                        ${teachers.map(teacher => {
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                        ${homeTeachers.map(teacher => {
                             const isUnlocked = Array.isArray(unlockedTeachers) && unlockedTeachers.includes(teacher.uid);
                             return html`
-                                <div key=${teacher.uid} className="flex-shrink-0 w-64 md:w-72 bg-white border border-indigo-900/5 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 snap-start flex flex-col justify-between relative overflow-hidden group">
-                                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 to-indigo-600"></div>
-                                    
-                                    <div className="flex flex-col items-center text-center">
-                                        <div className="relative mb-2.5 mt-2">
-                                            <img src=${teacher.photoUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop'} 
-                                                 className="w-16 h-16 rounded-full object-cover border-4 border-indigo-50 shadow-md group-hover:scale-105 transition-transform" 
-                                                 alt=${teacher.name} 
-                                                 onError=${(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop'; }} />
-                                            <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full animate-pulse" title="متصل الآن"></span>
-                                        </div>
-
-                                        <h4 className="font-black text-slate-800 text-xs md:text-sm leading-tight mb-1">${teacher.name}</h4>
-                                        
-                                        <span className="text-[8px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full mb-2 flex items-center gap-1">
-                                            <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span> متصل أونلاين
-                                        </span>
-
-                                        <div className="flex flex-wrap gap-1 justify-center mb-2.5">
-                                            ${Array.isArray(teacher.subjects) && teacher.subjects.map(sub => html`
-                                                <span key=${sub} className="text-[8px] font-black text-indigo-700 bg-indigo-50 border border-indigo-100/50 px-1.5 py-0.5 rounded-md">
-                                                    ${sub}
-                                                </span>
-                                            `)}
-                                        </div>
-
-                                        ${teacher.locations && html`
-                                            <p className="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100/50 rounded-lg px-2 py-1 w-full line-clamp-1 mb-1.5">
-                                                <i className="fa-solid fa-location-dot ml-1 text-[8px]"></i> ${teacher.locations}
-                                            </p>
-                                        `}
-
-                                        <p className="text-[10px] font-bold text-slate-500 leading-relaxed line-clamp-2 h-7 text-center px-1 mb-3">
-                                            ${teacher.description || 'معلم خبير لتقديم أفضل شرح ومذكرات تعليمية.'}
-                                        </p>
+                                <div key=${teacher.uid} className="flex flex-row items-center gap-4 bg-white border border-indigo-900/5 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-indigo-600"></div>
+                                    <div className="relative flex-shrink-0">
+                                        <img src=${teacher.photoUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop'} 
+                                             className="w-16 h-16 rounded-full object-cover border-2 border-indigo-50 shadow-sm" />
+                                        <span className="absolute bottom-1 right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full animate-pulse" title="متصل الآن"></span>
                                     </div>
-
-                                    <div className="mt-1">
+                                    <div className="flex-grow min-w-0 flex flex-col justify-between">
+                                        <div>
+                                            <h4 className="font-black text-slate-800 text-xs md:text-sm leading-tight truncate">${teacher.name}</h4>
+                                            <span className="text-[8px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full mt-1 inline-block">متصل أونلاين</span>
+                                            <p className="text-[10px] text-slate-500 font-bold leading-relaxed line-clamp-1 mt-1">${teacher.description || 'معلم خبير بوزارة التربية والتعليم.'}</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1 mt-1.5">
+                                            ${Array.isArray(teacher.subjects) && teacher.subjects.map(sub => html`<span key=${sub} className="text-[8px] font-black text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">${sub}</span>`)}
+                                        </div>
+                                    </div>
+                                    <div className="flex-shrink-0 self-center">
                                         ${isUnlocked ? html`
-                                            <button onClick=${() => onTeacherClick(teacher)} className="w-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer">
-                                                <i className="fa-solid fa-circle-check text-emerald-500 animate-bounce"></i> تصفح محاضرات المدرس
+                                            <button onClick=${() => onTeacherClick(teacher)} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-bold p-2 px-3 rounded-xl flex items-center gap-1 transition-colors cursor-pointer">
+                                                <i className="fa-solid fa-circle-check"></i> دخول
                                             </button>
                                         ` : html`
-                                            <button onClick=${() => onTeacherClick(teacher)} className="w-full bg-indigo-950 hover:bg-indigo-900 text-white text-[10px] py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm transition-colors cursor-pointer">
-                                                <i className="fa-solid fa-key"></i> تفعيل المحتوى الخاص
+                                            <button onClick=${() => onTeacherClick(teacher)} className="bg-indigo-950 hover:bg-indigo-900 text-white text-[10px] font-bold p-2 px-3 rounded-xl flex items-center gap-1 transition-colors cursor-pointer">
+                                                <i className="fa-solid fa-key"></i> تفعيل
                                             </button>
                                         `}
                                     </div>
@@ -522,6 +513,14 @@
                             `;
                         })}
                     </div>
+
+                    ${teachers.length > 5 && html`
+                        <div className="text-center pt-2">
+                            <button onClick=${onNavigateMore} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-950 border border-indigo-200 font-black text-xs px-6 py-3 rounded-xl transition-all cursor-pointer shadow-sm">
+                                عرض المزيد من النخبة <i className="fa-solid fa-arrow-left text-[10px] mr-1"></i>
+                            </button>
+                        </div>
+                    `}
                 </div>
             `;
         });
@@ -665,7 +664,10 @@
                     showToast("الرجاء إدخال كود الاشتراك أولاً", "error");
                     return;
                 }
-                showToast("جاري التحقق من الاشتراك...", "info", 2000);
+                
+                setSubscribeModal(null);
+                showToast("جاري تفعيل كود الاشتراك...", "info", 1500);
+
                 try {
                     const q = query(
                         collection(db, 'student_codes'),
@@ -675,6 +677,7 @@
                     const querySnapshot = await getDocs(q);
                     if (querySnapshot.empty) {
                         showToast("الكود غير صحيح أو لا ينتمي لهذا المعلم!", "error");
+                        setSubscribeModal({ uid: teacherId, name: subscribeModal?.name || "المعلم" });
                         return;
                     }
                     
@@ -688,7 +691,8 @@
                     }
                     
                     if (codeData.usedByDeviceId && codeData.usedByDeviceId !== deviceId) {
-                        showToast("عذراً، تم تفعيل هذا الكود مسبقاً على جهاز آخر!", "error");
+                        showToast("عذراً، هذا الكود مفعّل مسبقاً على جهاز آخر!", "error");
+                        setSubscribeModal({ uid: teacherId, name: subscribeModal?.name || "المعلم" });
                         return;
                     }
                     
@@ -702,13 +706,13 @@
                     localStorage.setItem('foc_unlocked_teachers', JSON.stringify(updatedUnlocked));
                     
                     showToast("تم تفعيل اشتراك المعلم بنجاح! 🎉", "success");
-                    setSubscribeModal(null);
                     setSubCode('');
                 } catch (error) {
                     console.error(error);
-                    showToast("حدث خطأ أثناء التحقق، حاول مجدداً", "error");
+                    showToast("حدث خطأ أثناء الاتصال بالخادم", "error");
+                    setSubscribeModal({ uid: teacherId, name: subscribeModal?.name || "المعلم" });
                 }
-            }, [unlockedTeachers, showToast]);
+            }, [unlockedTeachers, showToast, subscribeModal]);
 
             const handleTeacherCardClick = useCallback((teacher) => {
                 if (!unlockedTeachers || !unlockedTeachers.includes(teacher.uid)) {
@@ -817,54 +821,6 @@
             };
 
             useEffect(() => {
-                const hasVisited = localStorage.getItem('foc_has_visited');
-                let welcomeTimer;
-                if (!hasVisited) {
-                    welcomeTimer = setTimeout(() => {
-                        showToast("أهلاً بكم في منصتي التعليمية", "success", 3000);
-                        localStorage.setItem('foc_has_visited', 'true');
-                    }, 1500);
-                }
-
-                if ('Notification' in window && Notification.permission === 'granted' && messaging) {
-                    const fetchTokenSilently = async () => {
-                        try {
-                            const swRegistration = await navigator.serviceWorker.ready;
-                            const token = await getToken(messaging, { vapidKey: 'BE3EmhXjZXjrDdn4duFuZ7cFpHppvPGgCI-X1M8VCPgSlBuHRg-BD6cxnvOD8SE3HzC33dBgVwCOzpEW1zKbvgk', serviceWorkerRegistration: swRegistration });
-                            if (token) {
-                                const tokenRef = doc(db, 'fcm_tokens', token);
-                                await setDoc(tokenRef, { token: token, platform: navigator.userAgent, createdAt: serverTimestamp() }, { merge: true });
-                            }
-                        } catch(e) { console.error('Silent token fetch failed', e); }
-                    }
-                    fetchTokenSilently();
-                }
-
-                try {
-                    const params = new URLSearchParams(window.location.search);
-                    const pageParam = params.get('page') || params.get('p');
-                    const itemParam = params.get('item') || params.get('i');
-
-                    const resolveYear = (val) => {
-                        if(!val) return 'اختار الصف';
-                        if(val === '1') return 'الصف الأول الثانوي'; if(val === '2') return 'الصف الثاني الثانوي'; if(val === '3') return 'الصف الثالث الثانوي'; if(val === 'all') return 'كل الصفوف';
-                        if(val.includes('الصف') || val === 'كل الصفوف') return val; return 'اختار الصف';
-                    };
-                    const resolveSystem = (val) => {
-                        if(!val) return 'اختار الشعبة';
-                        if(val === 's') return 'علمي علوم'; if(val === 'm') return 'علمي رياضة'; if(val === 'l') return 'أدبي'; if(val === 'b') return 'نظام البكالوريا';
-                        if(val === 'علمي علوم' || val === 'علمي رياضة' || val === 'أدبي' || val === 'نظام البكالوريا') return val; return 'اختار الشعبة';
-                    };
-
-                    if (pageParam) {
-                        setPage(pageParam);
-                        setInitialFilters({ year: resolveYear(params.get('y') || params.get('year')), system: resolveSystem(params.get('s') || params.get('system')), teacherId: params.get('t') });
-                        if(itemParam) setHighlightedItemId(itemParam);
-                        const cleanUrl = getCleanBaseUrl() + window.location.search;
-                        window.history.replaceState({ page: pageParam }, document.title, cleanUrl);
-                    } else { window.history.replaceState({ page: 'home' }, document.title, getCleanBaseUrl()); }
-                } catch (err) { console.error("Init Error:", err); }
-
                 const qMat = query(collection(db, 'materials'), orderBy('createdAt', 'desc'), limit(150));
                 const unsubMat = onSnapshot(qMat, { includeMetadataChanges: true }, (snap) => {
                     const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -885,7 +841,7 @@
                     localStorage.setItem('foc_teachers_cache', JSON.stringify(data));
                 });
 
-                return () => { unsubMat(); unsubSch(); unsubTeach(); if(welcomeTimer) clearTimeout(welcomeTimer); };
+                return () => { unsubMat(); unsubSch(); unsubTeach(); };
             },[]);
 
             useEffect(() => {
@@ -1017,53 +973,118 @@
                         </div>
                     </nav>
 
-                    <nav className=${`bg-indigo-900 text-white fixed w-full left-0 z-50 shadow-lg border-b-2 border-amber-400 transition-all ${isOffline ? 'top-6 md:top-6' : 'top-0'}`}>
-                        <div className="w-full px-4 lg:px-8 flex justify-between items-center h-14 md:h-16">
-                            <div className="flex items-center gap-2 cursor-pointer group" onClick=${() => navigate('home')}>
-                                <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-full flex items-center justify-center text-indigo-900 shadow-inner group-hover:scale-105 transition-transform"><i className="fa-solid fa-graduation-cap text-sm md:text-lg"></i></div>
-                                <span className="font-black text-base md:text-xl tracking-tighter">الثانوية العامة</span>
-                            </div>
-                            <div className="hidden lg:flex items-center gap-1 text-xs md:text-sm h-full">
-                                <button onClick=${() => navigate('home')} className=${`px-3 h-full transition-colors hover:text-amber-300 ${page === 'home' ? 'nav-link-active' : ''}`}>الرئيسية</button>
-                                <button onClick=${() => navigate('lectures')} className=${`px-3 h-full transition-colors hover:text-amber-300 ${page === 'lectures' ? 'nav-link-active' : ''}`}>المحاضرات</button>
-                                <button onClick=${() => navigate('notes')} className=${`px-3 h-full transition-colors hover:text-amber-300 ${page === 'notes' ? 'nav-link-active' : ''}`}>المذكرات</button>
-                                <button onClick=${() => navigate('reviews')} className=${`px-3 h-full transition-colors hover:text-amber-300 ${page === 'reviews' ? 'nav-link-active' : ''}`}>المراجعات</button>
-                                <button onClick=${() => navigate('activities')} className=${`px-3 h-full transition-colors hover:text-amber-300 ${page === 'activities' ? 'nav-link-active' : ''}`}>الأنشطة</button>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <button onClick=${requestNotificationPermission} className="text-lg md:text-xl p-2 text-amber-400 hover:text-amber-300 transition-colors" title="تفعيل الإشعارات">
-                                    <i className="fa-solid fa-bell"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </nav>
-
                     <main className=${`flex-grow container mx-auto px-3 md:px-4 py-4 md:py-6 max-w-5xl relative pb-20 lg:pb-8 transition-all ${isOffline ? 'mt-20 md:mt-24' : 'mt-14 md:mt-16'}`}>
                         <${AdSlot} id="top-ad" />
-                        ${page === 'home' && html`
-                            <div className="space-y-6 md:space-y-8">
-                                <div className="relative rounded-2xl md:rounded-3xl overflow-hidden h-48 md:h-56 shadow-lg">
-                                    <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1364&auto=format&fit=crop" className="w-full h-full object-cover" alt="المنصة" fetchpriority="high" decoding="sync" onError=${(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml;utf8,<svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%231e293b'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%2394a3b8' text-anchor='middle' dominant-baseline='middle'>بوابة الثانوية العامة</text></svg>"; }} />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-800/60 to-transparent flex flex-col justify-center items-center text-center px-6 md:px-8 text-white">
-                                        <h2 className="text-2xl md:text-3xl font-black mb-1 md:mb-2 drop-shadow-lg text-white">بوابة الثانوية العامة</h2>
-                                        <p className="opacity-90 font-bold text-xs md:text-sm drop-shadow-md text-slate-100">منصة الطالب الشاملة - شهاب طارق صلاح</p>
+
+                        ${isDataLoading ? html`
+                            <div className="space-y-6 animate-pulse">
+                                <div className="h-48 md:h-56 bg-slate-200 rounded-3xl"></div>
+                                <div className="space-y-3">
+                                    <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+                                    <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar">
+                                        ${Array(3).fill(0).map((_, i) => html`
+                                            <div key=${i} className="flex-shrink-0 w-64 md:w-72 h-40 bg-slate-200 rounded-2xl"></div>
+                                        `)}
                                     </div>
                                 </div>
-                                <${HomeSlider} schedules=${schedules} onPreviewSlider=${openSliderPreview} />
-                                <${TeachersSlider} teachers=${teachers} unlockedTeachers=${unlockedTeachers} onTeacherClick=${handleTeacherCardClick} />
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                                    <${HomeCard} icon="fa-person-chalkboard" label="المحاضرات" onClick=${() => navigate('lectures')} />
-                                    <${HomeCard} icon="fa-book" label="المذكرات" onClick=${() => navigate('notes')} />
-                                    <${HomeCard} icon="fa-file-shield" label="المراجعات" onClick=${() => navigate('reviews')} />
-                                    <${HomeCard} icon="fa-users-gear" label="الأنشطة" onClick=${() => navigate('activities')} />
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    ${Array(4).fill(0).map((_, i) => html`
+                                        <div key=${i} className="h-24 bg-slate-200 rounded-xl"></div>
+                                    `)}
+                                </div>
+                            </div>
+                        ` : html`
+                            <${React.Fragment}>
+                                ${page === 'home' && html`
+                                    <div className="space-y-6 md:space-y-8">
+                                        <div className="relative rounded-2xl md:rounded-3xl overflow-hidden h-48 md:h-56 shadow-lg">
+                                            <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1364&auto=format&fit=crop" className="w-full h-full object-cover" alt="المنصة" fetchpriority="high" decoding="sync" onError=${(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml;utf8,<svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%231e293b'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%2394a3b8' text-anchor='middle' dominant-baseline='middle'>بوابة الثانوية العامة</text></svg>"; }} />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-800/60 to-transparent flex flex-col justify-center items-center text-center px-6 md:px-8 text-white">
+                                                <h2 className="text-2xl md:text-3xl font-black mb-1 md:mb-2 drop-shadow-lg text-white">بوابة الثانوية العامة</h2>
+                                                <p className="opacity-90 font-bold text-xs md:text-sm drop-shadow-md text-slate-100">منصة الطالب الشاملة - شهاب طارق صلاح</p>
+                                            </div>
+                                        </div>
+                                        <${HomeSlider} schedules=${schedules} onPreviewSlider=${openSliderPreview} />
+                                        
+                                        <${TeachersSlider} teachers=${teachers} unlockedTeachers=${unlockedTeachers} onTeacherClick=${handleTeacherCardClick} onNavigateMore=${() => navigate('all-teachers')} />
+                                        
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                                            <${HomeCard} icon="fa-person-chalkboard" label="المحاضرات" onClick=${() => navigate('lectures')} />
+                                            <${HomeCard} icon="fa-book" label="المذكرات" onClick=${() => navigate('notes')} />
+                                            <${HomeCard} icon="fa-file-shield" label="المراجعات" onClick=${() => navigate('reviews')} />
+                                            <${HomeCard} icon="fa-users-gear" label="الأنشطة" onClick=${() => navigate('activities')} />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-white border border-indigo-900/5 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+                                            <div className="md:col-span-7 flex flex-col justify-center space-y-3">
+                                                <span className="text-amber-500 font-black text-[10px] tracking-wider uppercase bg-amber-50 px-2.5 py-1 rounded-md w-fit">من نحن؟</span>
+                                                <h3 className="text-lg md:text-xl font-black text-slate-800 leading-tight">بوابتك التعليمية للتفوق وتحقيق أحلامك الأكاديمية</h3>
+                                                <p className="text-slate-500 text-xs font-bold leading-relaxed">
+                                                    نسعى في بوابة الثانوية العامة لتوفير تجربة تعليمية فريدة وموثوقة تجمع نخبة من أفضل المعلمين في مصر لتغطية كافة المناهج بأسلوب ميسّر ومذكرات ومراجعات شاملة في شتى المواد الدراسية.
+                                                </p>
+                                                <button onClick=${() => navigate('about')} className="bg-indigo-900 hover:bg-indigo-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl w-fit flex items-center gap-2 transition-all shadow-sm">
+                                                    اقرأ المزيد <i className="fa-solid fa-arrow-left text-[10px] mr-1"></i>
+                                                </button>
+                                            </div>
+                                            <div className="md:col-span-5 h-48 md:h-full rounded-xl overflow-hidden shadow-inner relative">
+                                                <img src="https://images.pexels.com/photos/2280886/pexels-photo-2280886.jpeg?auto=compress&cs=tinysrgb&w=600" className="w-full h-full object-cover" alt="من نحن" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `}
+                            </${React.Fragment}>
+                        `}
+
+                        ${page === 'all-teachers' && html`
+                            <div className="bg-soft-white p-4 md:p-6 rounded-2xl shadow-sm border border-indigo-900/5 space-y-4">
+                                <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                                    <button onClick=${goBack} className="text-slate-500 hover:text-indigo-900 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"><i className="fa-solid fa-arrow-right text-xs"></i></button>
+                                    <h2 className="text-base md:text-lg font-black text-slate-800">نخبة معلمي المنصة بالكامل</h2>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    ${teachers.map(teacher => {
+                                        const isUnlocked = Array.isArray(unlockedTeachers) && unlockedTeachers.includes(teacher.uid);
+                                        return html`
+                                            <div key=${teacher.uid} className="flex flex-row items-center gap-4 bg-white border border-indigo-900/5 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+                                                <div className="absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-indigo-600"></div>
+                                                <div className="relative flex-shrink-0">
+                                                    <img src=${teacher.photoUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop'} 
+                                                         className="w-16 h-16 rounded-full object-cover border-2 border-indigo-50 shadow-sm" />
+                                                    <span className="absolute bottom-1 right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full animate-pulse"></span>
+                                                </div>
+                                                <div className="flex-grow min-w-0 flex flex-col justify-between">
+                                                    <div>
+                                                        <h4 className="font-black text-slate-800 text-xs md:text-sm leading-tight truncate">${teacher.name}</h4>
+                                                        <span className="text-[8px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full mt-1 inline-block">متصل أونلاين</span>
+                                                        <p className="text-[10px] text-slate-500 font-bold leading-relaxed line-clamp-1 mt-1">${teacher.description || 'معلم خبير بوزارة التربية والتعليم.'}</p>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-1 mt-1.5">
+                                                        ${Array.isArray(teacher.subjects) && teacher.subjects.map(sub => html`<span key=${sub} className="text-[8px] font-black text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">${sub}</span>`)}
+                                                    </div>
+                                                </div>
+                                                <div className="flex-shrink-0 self-center">
+                                                    ${isUnlocked ? html`
+                                                        <button onClick=${() => handleTeacherCardClick(teacher)} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-bold p-2 px-3 rounded-xl flex items-center gap-1 transition-colors cursor-pointer">
+                                                            <i className="fa-solid fa-circle-check"></i> دخول
+                                                        </button>
+                                                    ` : html`
+                                                        <button onClick=${() => handleTeacherCardClick(teacher)} className="bg-indigo-950 hover:bg-indigo-900 text-white text-[10px] font-bold p-2 px-3 rounded-xl flex items-center gap-1 transition-colors cursor-pointer">
+                                                            <i className="fa-solid fa-key"></i> تفعيل
+                                                        </button>
+                                                    `}
+                                                </div>
+                                            </div>
+                                        `;
+                                    })}
                                 </div>
                             </div>
                         `}
 
-                        ${page === 'lectures' && html`<${SectionView} type="lectures" title="قسم المحاضرات" icon="fa-person-chalkboard" data=${getByType('lectures')} teachers=${teachers} showSystemFilter=${true} onBack=${goBack} onPreviewSingle=${openSinglePreview} onRequestDownload=${handleRequestDownload} initialFilters=${initialFilters} showToast=${showToast} highlightedItemId=${highlightedItemId} isLoading=${isDataLoading} />`}
-                        ${page === 'notes' && html`<${SectionView} type="notes" title="قسم المذكرات" icon="fa-book" data=${getByType('notes')} teachers=${teachers} showSystemFilter=${true} onBack=${goBack} onPreviewSingle=${openSinglePreview} onRequestDownload=${handleRequestDownload} initialFilters=${initialFilters} showToast=${showToast} highlightedItemId=${highlightedItemId} isLoading=${isDataLoading} />`}
-                        ${page === 'reviews' && html`<${SectionView} type="reviews" title="قسم المراجعات والامتحانات" icon="fa-file-shield" data=${getByType('reviews')} teachers=${teachers} showSystemFilter=${true} onBack=${goBack} onPreviewSingle=${openSinglePreview} onRequestDownload=${handleRequestDownload} initialFilters=${initialFilters} showToast=${showToast} highlightedItemId=${highlightedItemId} isLoading=${isDataLoading} />`}
-                        ${page === 'activities' && html`<${SectionView} type="activities" title="معرض الأنشطة العام" icon="fa-users-gear" data=${getByType('activities')} teachers=${teachers} hideYearFilter=${true} onBack=${goBack} onPreviewSingle=${openSinglePreview} onRequestDownload=${handleRequestDownload} initialFilters=${initialFilters} showToast=${showToast} highlightedItemId=${highlightedItemId} isLoading=${isDataLoading} />`}
+                        ${page === 'lectures' && html`<${SectionView} type="lectures" title="قسم المحاضرات" icon="fa-person-chalkboard" data=${getByType('lectures')} teachers=${teachers} unlockedTeachers=${unlockedTeachers} showSystemFilter=${true} onBack=${goBack} onPreviewSingle=${openSinglePreview} onRequestDownload=${handleRequestDownload} initialFilters=${initialFilters} showToast=${showToast} highlightedItemId=${highlightedItemId} isLoading=${isDataLoading} />`}
+                        ${page === 'notes' && html`<${SectionView} type="notes" title="قسم المذكرات" icon="fa-book" data=${getByType('notes')} teachers=${teachers} unlockedTeachers=${unlockedTeachers} showSystemFilter=${true} onBack=${goBack} onPreviewSingle=${openSinglePreview} onRequestDownload=${handleRequestDownload} initialFilters=${initialFilters} showToast=${showToast} highlightedItemId=${highlightedItemId} isLoading=${isDataLoading} />`}
+                        ${page === 'reviews' && html`<${SectionView} type="reviews" title="قسم المراجعات والامتحانات" icon="fa-file-shield" data=${getByType('reviews')} teachers=${teachers} unlockedTeachers=${unlockedTeachers} showSystemFilter=${true} onBack=${goBack} onPreviewSingle=${openSinglePreview} onRequestDownload=${handleRequestDownload} initialFilters=${initialFilters} showToast=${showToast} highlightedItemId=${highlightedItemId} isLoading=${isDataLoading} />`}
+                        ${page === 'activities' && html`<${SectionView} type="activities" title="معرض الأنشطة العام" icon="fa-users-gear" data=${getByType('activities')} teachers=${teachers} unlockedTeachers=${unlockedTeachers} hideYearFilter=${true} onBack=${goBack} onPreviewSingle=${openSinglePreview} onRequestDownload=${handleRequestDownload} initialFilters=${initialFilters} showToast=${showToast} highlightedItemId=${highlightedItemId} isLoading=${isDataLoading} />`}
                         ${page === 'about' && html`<${AboutPage} onBack=${goBack} />`}
 
                         <${AdSlot} id="bottom-ad" />
