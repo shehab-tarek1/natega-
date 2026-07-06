@@ -13,9 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="preload" href="./assets/fonts/cairo-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-
     <link rel="preload" as="image" href="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1364&auto=format&fit=crop" fetchpriority="high">
-    <link rel="stylesheet" href="/assets/fontawesome/css/all.min.css">
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#312e81"> 
@@ -46,7 +44,10 @@
         @font-face { font-family: 'Cairo'; font-style: normal; font-weight: 700; src: local('Cairo'), url('./assets/fonts/cairo-bold.woff2') format('woff2'); font-display: block; }
         @font-face { font-family: 'Cairo'; font-style: normal; font-weight: 900; src: local('Cairo'), url('./assets/fonts/cairo-black.woff2') format('woff2'); font-display: block; }
 
-        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; overflow-x: hidden; }
+        /* منع تحديد النصوص ليعطي إحساس تطبيق حقيقي */
+        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; overflow-x: hidden; user-select: none; -webkit-user-select: none; }
+        input, textarea, select { user-select: auto; -webkit-user-select: auto; }
+        
         button, a, select, input, .optimized-card { touch-action: manipulation; }
         .ad-container:empty { display: none !important; }
         .nav-link-active { border-bottom: 3px solid #f59e0b; color: #f59e0b !important; }
@@ -64,7 +65,14 @@
 </head>
 <body class="text-slate-800 bg-slate-50">
 
-    <div id="root"></div>
+    <div id="root">
+        <!-- شاشة التحميل الوهمية (Splash Screen) -->
+        <div style="height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #312e81;">
+            <div style="width: 50px; height: 50px; border: 4px solid #fff; border-top: 4px solid #f59e0b; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+            <h2 style="color: white; margin-top: 20px; font-family: 'Cairo', sans-serif; font-weight: bold;">جاري التحميل...</h2>
+        </div>
+    </div>
 
     <script type="module">
         import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
@@ -96,8 +104,7 @@
             projectId: "faculty-of-commerce-2026",
             storageBucket: "faculty-of-commerce-2026.firebasestorage.app",
             messagingSenderId: "350727231766",
-            appId: "1:350727231766:web:b08a0f335e38bfc2e79837",
-            measurementId: "G-XXXXXXXXXX" 
+            appId: "1:350727231766:web:b08a0f335e38bfc2e79837"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -207,7 +214,6 @@
             },[initialFilters]);
 
             const years = ['اختار الصف', 'الصف الأول الثانوي', 'الصف الثاني الثانوي', 'الصف الثالث الثانوي'];
-            // تم إضافة نظام البكالوريا هنا
             const systems = ['اختار الشعبة', 'علمي علوم', 'علمي رياضة', 'أدبي', 'نظام البكالوريا'];
 
             const filtered = useMemo(() => {
@@ -349,7 +355,7 @@
                                     <div key=${item.id} id=${`card-${numericId}`} className="optimized-card break-inside-avoid relative rounded-xl overflow-hidden cursor-pointer shadow-sm border border-slate-200 bg-black group" onClick=${() => onPreviewSingle(item.fileUrl)}>
                                         ${isVid && html`<div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"><div className="w-10 h-10 bg-black/60 rounded-full flex items-center justify-center text-white border-2 border-white/50"><i className="fa-solid fa-play ml-1 text-sm"></i></div></div>`}
                                         <button onClick=${(e) => handleShareCard(e, item)} className="absolute top-2 left-2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center z-30 opacity-0 group-hover:opacity-100 border border-white/20 transition-opacity"><i className="fa-solid fa-share-nodes text-xs"></i></button>
-                                        <img src=${getThumbnail(item.fileUrl, 'default')} alt=${item.title} loading="lazy" decoding="async" className="w-full h-auto object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
+                                        <img src=${getThumbnail(item.fileUrl, 'default')} alt=${item.title} loading="lazy" decoding="async" className="w-full h-auto object-cover opacity-90 group-hover:opacity-100 transition-opacity" onError=${(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml;utf8,<svg width='100%' height='150' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23e2e8f0'/><text x='50%' y='50%' font-family='sans-serif' font-size='12' fill='%2364748b' text-anchor='middle' dominant-baseline='middle'>بانتظار الإنترنت...</text></svg>"; }} />
                                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3 pt-8 text-white z-10 pointer-events-none"><h4 className="font-bold text-[11px] md:text-xs leading-tight drop-shadow-lg line-clamp-2">${item.title}</h4></div>
                                     </div>
                                 `;
@@ -358,7 +364,7 @@
                             return html`
                                 <div key=${item.id} id=${`card-${numericId}`} className="optimized-card flex flex-row sm:flex-col gap-3 p-2.5 border border-indigo-900/5 rounded-xl bg-white relative overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                                     <div className=${`relative flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 cursor-pointer flex items-center justify-center ${isA4Card ? 'w-20 h-28 sm:w-full sm:h-48' : 'w-24 h-24 sm:w-full sm:h-40'}`} onClick=${() => onPreviewSingle(item.fileUrl)}>
-                                        <img src=${getThumbnail(item.fileUrl, thumbType)} alt=${item.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                                        <img src=${getThumbnail(item.fileUrl, thumbType)} alt=${item.title} loading="lazy" decoding="async" className="w-full h-full object-cover" onError=${(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml;utf8,<svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23e2e8f0'/><text x='50%' y='50%' font-family='sans-serif' font-size='12' fill='%2364748b' text-anchor='middle' dominant-baseline='middle'>بانتظار الإنترنت...</text></svg>"; }} />
                                         ${item.fileUrl?.endsWith('.pdf') && html`<div className="absolute bottom-1 right-1 bg-red-600 text-white text-[9px] px-1.5 rounded font-bold shadow z-10">PDF</div>`}
                                         ${isVid && html`<div className="absolute inset-0 flex items-center justify-center z-20 bg-black/10"><div className="w-8 h-8 sm:w-10 sm:h-10 bg-black/70 rounded-full flex items-center justify-center text-white border-2 border-white/50"><i className="fa-solid fa-play ml-1 text-xs sm:text-sm"></i></div></div>`}
                                         ${showSystemFilter && item.studySystem && item.studySystem !== 'عام' && html`<div className="absolute top-0 right-0 bg-amber-400 text-indigo-900 text-[9px] font-black px-2 py-0.5 rounded-bl-lg z-20 shadow-sm">${item.studySystem}</div>`}
@@ -411,7 +417,7 @@
                 <div className="relative w-full rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-slate-200 group bg-slate-100">
                     <div className="bg-indigo-900 text-white text-center py-1.5 md:py-2 text-xs md:text-sm font-bold border-b border-amber-400 min-h-[28px] md:min-h-[36px]">${schedules[idx].title || 'جداول الحصص الرسمية'}</div>
                     <div className="h-40 md:h-72 relative cursor-pointer overflow-hidden flex items-center justify-center" onClick=${() => onPreviewSlider(schedules, idx)}>
-                        <img src=${getThumbnail(schedules[idx].url, 'slider')} className="w-full h-full object-contain scale-[1.02]" decoding="sync" fetchpriority=${idx === 0 ? "high" : "auto"} loading=${idx === 0 ? "eager" : "lazy"} alt=${schedules[idx].title || "جدول"} />
+                        <img src=${getThumbnail(schedules[idx].url, 'slider')} className="w-full h-full object-contain scale-[1.02]" decoding="sync" fetchpriority=${idx === 0 ? "high" : "auto"} loading=${idx === 0 ? "eager" : "lazy"} alt=${schedules[idx].title || "جدول"} onError=${(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml;utf8,<svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%23e2e8f0'/><text x='50%' y='50%' font-family='sans-serif' font-size='12' fill='%2364748b' text-anchor='middle' dominant-baseline='middle'>بانتظار الإنترنت...</text></svg>"; }} />
                         ${schedules.length > 1 && html`
                             <${React.Fragment}>
                                 <button onClick=${(e) => { e.preventDefault(); e.stopPropagation(); setIdx(i => (i-1+schedules.length)%schedules.length); }} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white w-7 h-7 rounded-full z-20 flex items-center justify-center"><i className="fa-solid fa-chevron-left text-xs"></i></button>
@@ -424,7 +430,6 @@
             `;
         });
 
-        // بطاقة الأقسام بالصورة الموحدة وتراكب لوني
         const HomeCard = React.memo(({ icon, label, onClick }) => html`
             <div onClick=${onClick} className="relative p-4 md:p-5 rounded-xl text-white flex flex-col items-center justify-center gap-2 shadow-sm cursor-pointer hover:scale-105 hover:shadow-md transition-all overflow-hidden border border-slate-200">
                 <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/289737/pexels-photo-289737.jpeg?auto=compress&cs=tinysrgb&w=500')] bg-cover bg-center"></div>
@@ -456,6 +461,7 @@
             const[highlightedItemId, setHighlightedItemId] = useState(null);
             const[isDataLoading, setIsDataLoading] = useState(true);
             const[isNavVisible, setIsNavVisible] = useState(true);
+            const[isOffline, setIsOffline] = useState(!navigator.onLine);
 
             const[materials, setMaterials] = useState(() => {
                 const cached = localStorage.getItem('foc_materials_cache');
@@ -475,7 +481,6 @@
 
             useEffect(() => { currentPageRef.current = page; },[page]);
 
-            // المنطق الخاص باختفاء وظهور الشريط السفلي (السفلي فقط)
             useEffect(() => {
                 let lastScrollY = window.pageYOffset || document.documentElement.scrollTop;
                 let ticking = false;
@@ -507,6 +512,19 @@
                 setToast({ message, type });
                 if (duration) setTimeout(() => setToast({ message: '', type: '' }), duration);
             },[]);
+
+            useEffect(() => {
+                const handleOnline = () => { setIsOffline(false); showToast("تم استعادة الاتصال بالإنترنت", "success"); };
+                const handleOffline = () => { setIsOffline(true); showToast("أنت تتصفح بدون إنترنت الآن", "error"); };
+                
+                window.addEventListener('online', handleOnline);
+                window.addEventListener('offline', handleOffline);
+                
+                return () => {
+                    window.removeEventListener('online', handleOnline);
+                    window.removeEventListener('offline', handleOffline);
+                };
+            }, [showToast]);
 
             const requestNotificationPermission = useCallback(async () => {
                 try {
@@ -651,7 +669,6 @@
                     };
                     const resolveSystem = (val) => {
                         if(!val) return 'اختار الشعبة';
-                        // إضافة نظام البكالوريا الجديد b
                         if(val === 's') return 'علمي علوم'; if(val === 'm') return 'علمي رياضة'; if(val === 'l') return 'أدبي'; if(val === 'b') return 'نظام البكالوريا';
                         if(val === 'علمي علوم' || val === 'علمي رياضة' || val === 'أدبي' || val === 'نظام البكالوريا') return val; return 'اختار الشعبة';
                     };
@@ -735,8 +752,13 @@
                         </div>
                     `}
 
-                    <!-- الهيدر العلوي ثابت تماما لا يختفي -->
-                    <nav className="bg-indigo-900 text-white fixed w-full left-0 top-0 z-50 shadow-lg border-b-2 border-amber-400">
+                    ${isOffline ? html`
+                        <div className="fixed top-0 left-0 w-full bg-red-600 text-white text-[11px] md:text-xs font-bold text-center py-1 z-[100] flex justify-center items-center gap-2 shadow-md">
+                            <i className="fa-solid fa-wifi"></i> وضع عدم الاتصال: بعض المحتويات تنتظر الإنترنت
+                        </div>
+                    ` : ''}
+
+                    <nav className=${`bg-indigo-900 text-white fixed w-full left-0 z-50 shadow-lg border-b-2 border-amber-400 transition-all ${isOffline ? 'top-6 md:top-6' : 'top-0'}`}>
                         <div className="w-full px-4 lg:px-8 flex justify-between items-center h-14 md:h-16">
                             <div className="flex items-center gap-2 cursor-pointer group" onClick=${() => navigate('home')}>
                                 <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-full flex items-center justify-center text-indigo-900 shadow-inner group-hover:scale-105 transition-transform"><i className="fa-solid fa-graduation-cap text-sm md:text-lg"></i></div>
@@ -757,13 +779,12 @@
                         </div>
                     </nav>
 
-                    <!-- اضافة padding-bottom للـ main لضمان عدم اختفاء المحتوى تحت الفوتر أو القائمة -->
-                    <main className="flex-grow container mx-auto px-3 md:px-4 py-4 md:py-6 max-w-5xl relative mt-14 md:mt-16 pb-20 lg:pb-8">
+                    <main className=${`flex-grow container mx-auto px-3 md:px-4 py-4 md:py-6 max-w-5xl relative pb-20 lg:pb-8 transition-all ${isOffline ? 'mt-20 md:mt-24' : 'mt-14 md:mt-16'}`}>
                         <${AdSlot} id="top-ad" />
                         ${page === 'home' && html`
                             <div className="space-y-6 md:space-y-8">
                                 <div className="relative rounded-2xl md:rounded-3xl overflow-hidden h-48 md:h-56 shadow-lg">
-                                    <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1364&auto=format&fit=crop" className="w-full h-full object-cover" alt="المنصة" fetchpriority="high" decoding="sync" />
+                                    <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1364&auto=format&fit=crop" className="w-full h-full object-cover" alt="المنصة" fetchpriority="high" decoding="sync" onError=${(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml;utf8,<svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='%231e293b'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%2394a3b8' text-anchor='middle' dominant-baseline='middle'>بوابة الثانوية العامة</text></svg>"; }} />
                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-800/60 to-transparent flex flex-col justify-center items-center text-center px-6 md:px-8 text-white">
                                         <h2 className="text-2xl md:text-3xl font-black mb-1 md:mb-2 drop-shadow-lg text-white">بوابة الثانوية العامة</h2>
                                         <p className="opacity-90 font-bold text-xs md:text-sm drop-shadow-md text-slate-100">منصة الطالب الشاملة - شهاب طارق صلاح</p>
@@ -788,7 +809,6 @@
                         <${AdSlot} id="bottom-ad" />
                     </main>
 
-                    <!-- القائمة السفلية للموبايل تختفي لأسفل عند النزول وتظهر عند الصعود -->
                     <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex text-indigo-900 z-50 shadow-[0_-4px_15px_rgba(0,0,0,0.04)] bottom-nav-safe"
                          style=${{ transform: isNavVisible ? 'translateY(0)' : 'translateY(100%)', transition: 'transform 0.3s ease-in-out' }}>
                         <button onClick=${() => navigate('home')} className=${`flex-1 flex flex-col items-center justify-center py-2.5 ${page === 'home' ? 'text-amber-500 bg-indigo-50/50' : 'text-slate-500 hover:text-indigo-900'}`}><i className="fa-solid fa-house text-[18px]"></i><span className="text-[9px] mt-1 font-bold">الرئيسية</span></button>
@@ -798,7 +818,6 @@
                         <button onClick=${() => navigate('activities')} className=${`flex-1 flex flex-col items-center justify-center py-2.5 ${page === 'activities' ? 'text-amber-500 bg-indigo-50/50' : 'text-slate-500 hover:text-indigo-900'}`}><i className="fa-solid fa-users-gear text-[18px]"></i><span className="text-[9px] mt-1 font-bold">الأنشطة</span></button>
                     </div>
 
-                    <!-- الفوتر يظهر حصرياً في الصفحة الرئيسية فقط مع اضافة مسافة علوية لكي لا يلتصق بالبطاقات -->
                     ${page === 'home' && html`
                         <footer className="bg-slate-900 text-slate-300 py-8 text-center mt-12 border-t-4 border-amber-400 pb-24 lg:pb-8">
                             <div className="container mx-auto px-4">
@@ -825,7 +844,10 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./firebase-messaging-sw.js') 
-                    .then((registration) => { console.log('[App] تم تسجيل Service Worker بنجاح، النطاق هو: ', registration.scope); })
+                    .then((registration) => { 
+                        console.log('[App] تم تسجيل Service Worker بنجاح، النطاق هو: ', registration.scope); 
+                        registration.update();
+                    })
                     .catch((error) => { console.error('[App] فشل تسجيل Service Worker: ', error); });
             });
         }
