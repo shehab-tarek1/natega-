@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الإدارة | كلية التجارة جامعة الزقازيق</title>
+
+    <!-- الخطوط والأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- إعدادات React -->
+    <script type="importmap">
+        {
+            "imports": {
+                "react": "https://esm.sh/react@18.2.0?dev=false",
+                "react-dom/client": "https://esm.sh/react-dom@18.2.0/client?dev=false"
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            background-color: #f1f5f9; 
+            overflow-x: hidden; 
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        @keyframes slideDown { from { transform: translate(-50%, -20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes dropdownOpen { from { opacity: 0; transform: scaleY(0.95) translateY(-5px); } to { opacity: 1; transform: scaleY(1) translateY(0); } }
+
+        .animate-toast { animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-fade { animation: fadeIn 0.2s ease-out forwards; }
+        .animate-scale { animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-dropdown { transform-origin: top; animation: dropdownOpen 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useCallback, useRef } from 'react';
+        import { createRoot } from 'react-dom/client';
+
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyANg4wLchZaikXneXr1c3qhRgcOnvPbfoA",
+            authDomain: "faculty-of-commerce-2026.firebaseapp.com",
+            projectId: "faculty-of-commerce-2026",
+            storageBucket: "faculty-of-commerce-2026.firebasestorage.app",
+            messagingSenderId: "350727231766",
+            appId: "1:350727231766:web:b08a0f335e38bfc2e79837"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = initializeFirestore(app, { localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()}) });
+
+        const CLOUD_NAME = 'dsxrjmcxs';
+        const UPLOAD_PRESET = 'my_public_preset';
+        const ADMIN_UID = 'mEVbroYWf7cg68SL8CB2uUS8XhZ2';
+
+        // 🌟 مكون القائمة المنسدلة المخصصة الجديد (Custom Select)
+        const CustomSelect = ({ value, onChange, options, label, icon }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const dropdownRef = useRef(null);
+
+            // إغلاق القائمة عند الضغط خارجها
+            useEffect(() => {
+                const handleClickOutside = (event) => {
+                    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                        setIsOpen(false);
+                    }
+                };
+                document.addEventListener('mousedown', handleClickOutside);
+                return () => document.removeEventListener('mousedown', handleClickOutside);
+            }, []);
+
+            const selectedOption = options.find(opt => opt.value === value) || options[0];
+
+            return (
+                <div className="space-y-1.5 relative w-full" ref={dropdownRef}>
+                    {label && <label className="text-xs font-bold text-gray-600 ml-1 block">{label}</label>}
+
+                    <button 
+                        type="button" 
+                        onClick={() => setIsOpen(!isOpen)}
+                        className={`w-full flex items-center justify-between p-3 rounded-xl border ${isOpen ? 'border-blue-500 ring-2 ring-blue-500/20 bg-white' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'} transition-all text-sm font-bold text-gray-700`}
+                    >
+                        <div className="flex items-center gap-2 truncate">
+                            {icon && <i className={`fa-solid ${icon} text-gray-400`}></i>}
+                            {selectedOption.icon && <i className={`fa-solid ${selectedOption.icon} text-blue-500 w-4`}></i>}
+                            <span className="truncate">{selectedOption.label}</span>
+                        </div>
+                        <i className={`fa-solid fa-chevron-down text-gray-400 text-[10px] transition-transform duration-300 ${isOpen ? 'rotate-180 text-blue-500' : ''}`}></i>
+                    </button>
+
+                    {isOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-100 shadow-xl rounded-xl z-50 overflow-hidden animate-dropdown">
+                            <ul className="max-h-60 overflow-y-auto custom-scrollbar py-1">
+                                {options.map((opt, idx) => (
+                                    <li 
+                                        key={idx}
+                                        onClick={() => { onChange(opt.value); setIsOpen(false); }}
+                                        className={`flex items-center gap-2.5 px-4 py-2.5 cursor-pointer text-sm font-bold transition-colors ${value === opt.value ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+                                    >
+                                        {opt.icon && <i className={`fa-solid ${opt.icon} ${value === opt.value ? 'text-blue-500' : 'text-gray-400'} w-4 text-center`}></i>}
+                                        <span className="flex-1">{opt.label}</span>
+                                        {value === opt.value && <i className="fa-solid fa-check text-blue-500 text-xs"></i>}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const Toast = React.memo(({ message, type }) => {
+            if (!message) return null;
+            const bgClass = type === 'error' ? 'bg-red-50 border-red-500 text-red-700' : type === 'success' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-blue-50 border-blue-500 text-blue-700';
+            const iconClass = type === 'error' ? 'fa-triangle-exclamation text-red-500' : type === 'success' ? 'fa-circle-check text-green-500' : 'fa-circle-notch fa-spin text-blue-500';
+
+            return (
+                <div className={`fixed top-6 left-1/2 -translate-x-1/2 ${bgClass} border-b-4 px-6 py-3 rounded-xl shadow-xl text-sm font-bold z-[999] flex items-center gap-3 whitespace-nowrap animate-toast`}>
+                    <i className={`fa-solid ${iconClass} text-lg`}></i>
+                    {message}
+                </div>
+            );
+        });
+
+        const AdminLogin = ({ onSuccess, showToast }) => {
+            const[e, setE] = useState(''); const [p, setP] = useState('');
+            const handle = async () => {
+                showToast("جاري التحقق...", "info", 1000);
+                try {
+                    const cred = await signInWithEmailAndPassword(auth, e, p);
+                    if (cred.user.uid === ADMIN_UID) onSuccess();
+                    else { await signOut(auth); showToast("ليس لديك صلاحية الدخول", "error"); }
+                } catch { showToast("خطأ في البريد أو كلمة المرور", "error"); }
+            };
+
+            return (
+                <div className="min-h-screen flex items-center justify-center p-4">
+                    <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-2xl border border-gray-100">
+                        <div className="flex justify-center mb-6">
+                            <div className="w-20 h-20 bg-gradient-to-tr from-blue-900 to-blue-700 text-white rounded-2xl flex items-center justify-center text-4xl shadow-lg transform rotate-3"><i className="fa-solid fa-user-shield -rotate-3"></i></div>
+                        </div>
+                        <h2 className="text-2xl font-black mb-2 text-center text-gray-800">مرحباً بعودتك!</h2>
+                        <p className="text-center text-gray-500 mb-8 text-sm font-bold">يرجى تسجيل الدخول للوصول للوحة التحكم</p>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">البريد الإلكتروني</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400"><i className="fa-solid fa-envelope"></i></div>
+                                    <input type="email" placeholder="admin@example.com" className="w-full pl-4 pr-10 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-sm font-bold" onChange={v=>setE(v.target.value)} />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-1.5 ml-1">كلمة المرور</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400"><i className="fa-solid fa-lock"></i></div>
+                                    <input type="password" placeholder="••••••••" className="w-full pl-4 pr-10 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-sm font-bold" onChange={v=>setP(v.target.value)} />
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={handle} className="w-full bg-blue-900 hover:bg-blue-800 text-white py-3.5 rounded-xl font-bold shadow-md shadow-blue-900/20 text-sm mt-8 mb-4">دخول للوحة التحكم <i className="fa-solid fa-arrow-left mr-2"></i></button>
+                    </div>
+                </div>
+            );
+        };
+
+        const AdminDashboard = ({ materials, schedules, showToast }) => {
+            const [title, setTitle] = useState('');
+            const [sec, setSec] = useState('lectures');
+            const [year, setYear] = useState('الفرقة الأولى');
+            const [studySystem, setStudySystem] = useState('عام');
+            const [link, setLink] = useState('');
+            const [phone, setPhone] = useState('');
+            const [description, setDescription] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [uploadProgress, setUploadProgress] = useState(0);
+            const [uploadQueue, setUploadQueue] = useState([]);
+            const[confirmDelete, setConfirmDelete] = useState(null);
+
+            // خيارات القوائم المنسدلة
+            const sectionOptions =[
+                { value: 'lectures', label: 'قسم المحاضرات', icon: 'fa-person-chalkboard' },
+                { value: 'notes', label: 'قسم المذكرات', icon: 'fa-book' },
+                { value: 'reviews', label: 'قسم المراجعات', icon: 'fa-file-shield' },
+                { value: 'activities', label: 'قسم الأنشطة (عام)', icon: 'fa-users-gear' },
+                { value: 'training', label: 'قسم التدريب والكورسات', icon: 'fa-graduation-cap' },
+                { value: 'jobs', label: 'قسم الوظائف (عام)', icon: 'fa-briefcase' },
+                { value: 'guide', label: 'دليل الطالب', icon: 'fa-map-location' },
+                { value: 'schedule', label: 'جدول محاضرات (سلايدر)', icon: 'fa-images' }
+            ];
+
+            let yearOptions =[
+                { value: 'الفرقة الأولى', label: 'الفرقة الأولى', icon: 'fa-1' },
+                { value: 'الفرقة الثانية', label: 'الفرقة الثانية', icon: 'fa-2' },
+                { value: 'الفرقة الثالثة', label: 'الفرقة الثالثة', icon: 'fa-3' },
+                { value: 'الفرقة الرابعة', label: 'الفرقة الرابعة', icon: 'fa-4' }
+            ];
+            if (sec === 'training') yearOptions.push({ value: 'كل الفرق', label: 'كل الفرق', icon: 'fa-layer-group' });
+
+            const systemOptions =[
+                { value: 'عام', label: 'عام (انتظام وانتساب)', icon: 'fa-users' },
+                { value: 'انتظام', label: 'انتظام فقط', icon: 'fa-user' },
+                { value: 'انتساب', label: 'انتساب فقط', icon: 'fa-user-clock' }
+            ];
+
+            const handleFileChange = (e) => {
+                const files = Array.from(e.target.files);
+                setUploadQueue(files.map(f => {
+                    const isMedia = f.type.startsWith('image/') || f.type.startsWith('video/');
+                    return { file: f, title: isMedia ? '' : f.name.split('.')[0] };
+                }));
+            };
+
+            const uploadFileWithProgress = (file, isCompressed) => {
+                return new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.timeout = 0; 
+                    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`);
+                    xhr.upload.onprogress = (e) => { if (e.lengthComputable) setUploadProgress(isCompressed ? 40 + Math.floor(Math.round((e.loaded / e.total) * 100) * 0.6) : Math.round((e.loaded / e.total) * 100)); };
+                    xhr.onload = () => { if (xhr.status === 200) resolve(JSON.parse(xhr.responseText)); else reject(JSON.parse(xhr.responseText)); };
+                    xhr.onerror = () => reject("Network Error");
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('upload_preset', UPLOAD_PRESET);
+                    xhr.send(formData);
+                });
+            };
+
+            const upload = async () => {
+                setLoading(true); setUploadProgress(0);
+                try {
+                    const { default: imageCompression } = await import('https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/+esm');
+                    const finalStudySystem = (sec === 'lectures' || sec === 'notes' || sec === 'reviews' || sec === 'guide') ? studySystem : 'عام';
+
+                    if (uploadQueue.length > 0) {
+                        const hasEmptyTitles = uploadQueue.some(item => !item.title || !item.title.trim());
+                        if (hasEmptyTitles) { showToast("الرجاء كتابة وصف/عنوان لجميع الملفات", "error"); setLoading(false); return; }
+
+                        for (let i = 0; i < uploadQueue.length; i++) {
+                            const item = uploadQueue[i]; setUploadProgress(0);
+                            let fileUrl = null; let fileToUpload = item.file;
+                            let isPdf = fileToUpload.type === 'application/pdf' || fileToUpload.name.toLowerCase().endsWith('.pdf');
+                            let isVideo = fileToUpload.type.startsWith('video/');
+                            let isCompressed = false;
+
+                            if (fileToUpload.type.startsWith('image/') && fileToUpload.size > 500 * 1024) { 
+                                showToast(`جاري ضغط الصورة (${i+1}/${uploadQueue.length})...`, "info", 0);
+                                try { fileToUpload = await imageCompression(fileToUpload, { maxSizeMB: 0.5, maxWidthOrHeight: 1000, useWebWorker: true, initialQuality: 0.6, onProgress: (p) => setUploadProgress(Math.floor(p * 0.4)) }); isCompressed = true; } catch (e) { console.error(e); }
+                            }
+
+                            showToast(`جاري الرفع (${i+1}/${uploadQueue.length})...`, "info", 0);
+                            const d = await uploadFileWithProgress(fileToUpload, isCompressed);
+                            fileUrl = (!isPdf && !isVideo && d.secure_url.includes('/image/upload/')) ? d.secure_url.replace('/upload/', '/upload/w_1000,q_auto,f_auto/') : d.secure_url;
+
+                            if (sec === 'schedule') await addDoc(collection(db, 'schedules'), { title: item.title, url: fileUrl, createdAt: Date.now() });
+                            else await addDoc(collection(db, 'materials'), { title: item.title, fileUrl: fileUrl, sectionType: sec, year: (sec === 'jobs' || sec === 'activities') ? 'عام' : year, studySystem: finalStudySystem, link: sec === 'training' ? link : null, phone: sec === 'jobs' ? phone : null, description: sec === 'jobs' ? description : null, createdAt: Date.now(), department: 'عام' });
+                        }
+                    } else {
+                        if (!title) { showToast("الرجاء كتابة العنوان أولاً", "error"); setLoading(false); return; }
+                        showToast("جاري النشر...", "info", 0);
+                        await addDoc(collection(db, 'materials'), { title: title, fileUrl: null, sectionType: sec, year: (sec === 'jobs' || sec === 'activities') ? 'عام' : year, studySystem: finalStudySystem, link: sec === 'training' ? link : null, phone: sec === 'jobs' ? phone : null, description: sec === 'jobs' ? description : null, createdAt: Date.now(), department: 'عام' });
+                    }
+                    showToast("تمت الإضافة بنجاح", "success");
+                    setTitle(''); setLink(''); setPhone(''); setDescription(''); setUploadQueue([]); setUploadProgress(0);
+                    document.getElementById('fileInput').value = '';
+                } catch(e) { showToast("حدث خطأ أثناء الرفع", "error"); console.error(e); }
+                setLoading(false);
+            };
+
+            const requestDelete = (col, id, title) => setConfirmDelete({ col, id, title });
+            const executeDelete = async () => {
+                if (!confirmDelete) return;
+                try { await deleteDoc(doc(db, confirmDelete.col, confirmDelete.id)); showToast("تم الحذف بنجاح", "success"); } catch (error) { showToast("حدث خطأ أثناء الحذف", "error"); }
+                setConfirmDelete(null);
+            };
+
+            return (
+                <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+                    <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-100">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl shadow-inner border border-blue-100"><i className="fa-solid fa-gauge-high"></i></div>
+                            <div>
+                                <h2 className="text-xl md:text-2xl font-black text-gray-800">لوحة تحكم المشرف</h2>
+                                <p className="text-xs text-gray-500 font-bold mt-1">إدارة محتوى المنصة بخطوات بسيطة.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <button onClick={() => {signOut(auth); showToast("تم تسجيل الخروج","success");}} className="flex-1 sm:flex-none text-center bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all border border-red-200">خروج <i className="fa-solid fa-arrow-right-from-bracket mr-1"></i></button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div className="lg:col-span-7 space-y-6">
+                            <div className="bg-white p-5 md:p-7 rounded-2xl shadow-sm border border-gray-100 relative z-10">
+                                <h3 className="font-black text-lg text-gray-800 mb-5 border-r-4 border-blue-600 pr-3">إضافة محتوى جديد</h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <CustomSelect label="القسم المراد الإضافة إليه" options={sectionOptions} value={sec} onChange={setSec} />
+
+                                    {sec !== 'jobs' && sec !== 'activities' && sec !== 'schedule' && (
+                                        <CustomSelect label="الفرقة الدراسية" options={yearOptions} value={year} onChange={setYear} />
+                                    )}
+
+                                    {(sec === 'lectures' || sec === 'notes' || sec === 'reviews' || sec === 'guide') && (
+                                        <div className="md:col-span-2">
+                                            <CustomSelect label="نظام الدراسة" options={systemOptions} value={studySystem} onChange={setStudySystem} />
+                                        </div>
+                                    )}
+
+                                    {sec === 'training' && (
+                                        <div className="space-y-1.5 md:col-span-2 mt-2">
+                                            <label className="text-xs font-bold text-gray-600 ml-1">رابط الكورس (يوتيوب وغيرها)</label>
+                                            <input placeholder="https://..." value={link} className="w-full border border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 font-bold" onChange={v=>setLink(v.target.value)} dir="ltr" />
+                                        </div>
+                                    )}
+
+                                    {sec === 'jobs' && (
+                                        <>
+                                            <div className="space-y-1.5 md:col-span-2 mt-2">
+                                                <label className="text-xs font-bold text-gray-600 ml-1">رقم هاتف التواصل</label>
+                                                <input placeholder="010..." value={phone} className="w-full border border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 font-bold" onChange={v=>setPhone(v.target.value)} dir="ltr" />
+                                            </div>
+                                            <div className="space-y-1.5 md:col-span-2">
+                                                <label className="text-xs font-bold text-gray-600 ml-1">تفاصيل الوظيفة</label>
+                                                <textarea placeholder="اكتب وصف الوظيفة هنا..." value={description} className="w-full border border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 font-bold custom-scrollbar" rows="3" onChange={v=>setDescription(v.target.value)}></textarea>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <div className="md:col-span-2 mt-4 relative z-0">
+                                        <label className="text-xs font-bold text-gray-600 ml-1 mb-2 block">إرفاق الملفات</label>
+                                        <div className="relative border-2 border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors group">
+                                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-blue-100 mb-3 group-hover:scale-110 transition-transform"><i className="fa-solid fa-cloud-arrow-up text-3xl text-blue-500"></i></div>
+                                            <span className="text-base font-black text-blue-900 mb-1">اضغط هنا لاختيار الملفات</span>
+                                            <span className="text-xs font-bold text-blue-600/70 text-center">صور، PDF، فيديوهات (الحد الأقصى 100MB)</span>
+                                            <input id="fileInput" type="file" multiple className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleFileChange} />
+                                        </div>
+                                    </div>
+
+                                    {uploadQueue.length === 0 ? (
+                                        <div className="space-y-1.5 md:col-span-2 mt-2">
+                                            <label className="text-xs font-bold text-gray-600 ml-1">عنوان المحتوى (في حالة عدم رفع ملف)</label>
+                                            <input maxLength={70} placeholder="اكتب العنوان هنا..." value={title} className="w-full border border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 font-bold" onChange={v=>setTitle(v.target.value)} />
+                                        </div>
+                                    ) : (
+                                        <div className="md:col-span-2 bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-3 mt-4">
+                                            <label className="text-sm font-black text-gray-800 flex items-center gap-2"><i className="fa-solid fa-pen-to-square text-blue-600"></i> تسمية الملفات ({uploadQueue.length}):</label>
+                                            {uploadQueue.map((item, idx) => (
+                                                <div key={idx} className="flex flex-col sm:flex-row items-center gap-3 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm">
+                                                    <div className="w-full sm:w-1/3 flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100"><i className="fa-solid fa-file-lines text-gray-400"></i><span className="text-xs text-gray-600 truncate font-semibold" dir="ltr">{item.file.name}</span></div>
+                                                    <input maxLength={70} className={`w-full sm:w-2/3 border ${!item.title ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'} p-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 bg-white font-bold transition`} value={item.title} placeholder="اكتب عنوان أو وصف هذا الملف..." onChange={(e) => { const newQ =[...uploadQueue]; newQ[idx].title = e.target.value; setUploadQueue(newQ); }} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div className="md:col-span-2 mt-6">
+                                        <button onClick={upload} disabled={loading} className={`w-full py-4 rounded-xl font-black text-white shadow-lg flex justify-center items-center gap-3 text-base transition-all ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-l from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'}`}>
+                                            {loading ? <><i className="fa-solid fa-circle-notch fa-spin text-xl"></i> جاري الرفع ({uploadProgress}%)</> : <><i className="fa-solid fa-upload"></i> تأكيد ونشر المحتوى</>}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-5 space-y-6">
+                            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col max-h-[800px]">
+                                <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100">
+                                    <h3 className="font-black text-lg text-gray-800 border-r-4 border-green-500 pr-3">المحتوى الحالي</h3>
+                                    <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold">{materials.length + schedules.length} عنصر</span>
+                                </div>
+                                <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+                                    {materials.map(m => (
+                                        <div key={m.id} className="flex justify-between items-center p-3 bg-gray-50 border border-gray-100 rounded-xl shadow-sm hover:shadow hover:bg-white transition-all">
+                                            <div className="flex flex-col gap-1 overflow-hidden pr-1">
+                                                <span className="font-bold text-sm text-gray-800 line-clamp-1">{m.title}</span>
+                                                <div className="flex flex-wrap gap-1.5 items-center">
+                                                    <span className="text-gray-500 text-[10px] font-bold bg-white px-2 py-0.5 rounded border border-gray-200">{m.sectionType}</span>
+                                                    {m.year && <span className="text-gray-500 text-[10px] font-bold bg-white px-2 py-0.5 rounded border border-gray-200">{m.year}</span>}
+                                                </div>
+                                            </div>
+                                            <button onClick={()=>requestDelete('materials', m.id, m.title)} className="w-9 h-9 flex-shrink-0 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg flex items-center justify-center transition-colors ml-1 border border-red-100"><i className="fa-solid fa-trash-can text-sm"></i></button>
+                                        </div>
+                                    ))}
+                                    {schedules.map(s => (
+                                        <div key={s.id} className="flex justify-between items-center p-3 bg-yellow-50 border border-yellow-200 rounded-xl shadow-sm hover:shadow hover:bg-yellow-100 transition-all">
+                                            <div className="flex flex-col gap-1 overflow-hidden pr-1">
+                                                <span className="font-bold text-sm text-yellow-900 line-clamp-1">{s.title}</span>
+                                                <span className="text-yellow-700 text-[10px] font-bold bg-white/50 px-2 py-0.5 rounded w-fit border border-yellow-200">سلايدر الرئيسية</span>
+                                            </div>
+                                            <button onClick={()=>requestDelete('schedules', s.id, s.title)} className="w-9 h-9 flex-shrink-0 bg-white border border-red-200 text-red-500 hover:bg-red-500 hover:text-white rounded-lg flex items-center justify-center transition-colors ml-1"><i className="fa-solid fa-trash-can text-sm"></i></button>
+                                        </div>
+                                    ))}
+                                    {materials.length === 0 && schedules.length === 0 && <div className="text-center text-gray-400 py-10 font-bold text-sm">لا توجد بيانات</div>}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {confirmDelete && (
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm animate-fade" onClick={() => setConfirmDelete(null)}></div>
+                            <div className="relative bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-scale border border-gray-100 text-center">
+                                <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-5 border-4 border-red-100"><i className="fa-solid fa-triangle-exclamation text-3xl text-red-500"></i></div>
+                                <h3 className="text-xl font-black text-gray-800 mb-2">تأكيد الحذف</h3>
+                                <p className="text-red-600 font-black text-sm mb-6 bg-red-50 p-2 rounded-lg border border-red-100 line-clamp-2">{confirmDelete.title}</p>
+                                <div className="flex gap-3">
+                                    <button onClick={executeDelete} className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl text-sm font-bold shadow-md shadow-red-500/20">تأكيد</button>
+                                    <button onClick={() => setConfirmDelete(null)} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl text-sm font-bold">تراجع</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [isAdmin, setIsAdmin] = useState(false);
+            const[materials, setMaterials] = useState([]);
+            const [schedules, setSchedules] = useState([]);
+            const [toast, setToast] = useState({ message: '', type: '' });
+
+            const showToast = useCallback((message, type = 'info', duration = 3000) => {
+                setToast({ message, type });
+                if (duration) setTimeout(() => setToast({ message: '', type: '' }), duration);
+            },[]);
+
+            useEffect(() => {
+                const unsubscribeAuth = onAuthStateChanged(auth, (u) => setIsAdmin(u && u.uid === ADMIN_UID));
+                return () => unsubscribeAuth();
+            },[]);
+
+            useEffect(() => {
+                if (isAdmin) {
+                    const qMat = query(collection(db, 'materials'), orderBy('createdAt', 'desc'), limit(200));
+                    const unsubMat = onSnapshot(qMat, (snap) => setMaterials(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+                    const unsubSch = onSnapshot(collection(db, 'schedules'), (snap) => setSchedules(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+                    return () => { unsubMat(); unsubSch(); };
+                }
+            }, [isAdmin]);
+
+            return (
+                <div className="min-h-screen relative selection:bg-blue-200 selection:text-blue-900">
+                    <Toast message={toast.message} type={toast.type} />
+                    {!isAdmin ? <AdminLogin onSuccess={() => showToast("تم تسجيل الدخول بنجاح", "success")} showToast={showToast} /> : <AdminDashboard materials={materials} schedules={schedules} showToast={showToast} />}
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
