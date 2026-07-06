@@ -17,7 +17,7 @@
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#312e81"> 
-    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <link class="apple-touch-icon" href="icon-192x192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -64,13 +64,7 @@
 </head>
 <body class="text-slate-800 bg-slate-50">
 
-    <div id="root">
-        <div style="height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #312e81;">
-            <div style="width: 50px; height: 50px; border: 4px solid #fff; border-top: 4px solid #f59e0b; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-            <h2 style="color: white; margin-top: 20px; font-family: 'Cairo', sans-serif; font-weight: bold;">جاري التحميل...</h2>
-        </div>
-    </div>
+    <div id="root"></div>
 
     <script type="module">
         import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
@@ -215,6 +209,11 @@
                 return () => document.removeEventListener("mousedown", handleClickOutside);
             },[]);
 
+            // إصلاح مشكلة تعليق الفلترة: إعادة تعيين عدد العناصر المرئية عند تغير الفلاتر
+            useEffect(() => {
+                setVisibleCount(6);
+            }, [filterYear, filterSystem, filterTeacher]);
+
             useEffect(() => {
                 if(initialFilters?.year) setFilterYear(initialFilters.year);
                 if(initialFilters?.system) setFilterSystem(initialFilters.system);
@@ -249,7 +248,7 @@
                     if (entries[0].isIntersecting && !isLoading && visibleCount < filtered.length) {
                         setVisibleCount(prev => prev + 12);
                     }
-                }, { threshold: 0.1 });
+                }, { threshold: 0.1, rootMargin: '200px' });
                 if (loaderRef.current) observer.observe(loaderRef.current);
                 return () => observer.disconnect();
             }, [filtered.length, visibleCount, isLoading]);
@@ -277,22 +276,6 @@
                 } catch (err) { console.error(err); }
             };
 
-            const handleShareSection = async (e) => {
-                e.stopPropagation();
-                try {
-                    const baseUrl = getCleanBaseUrl();
-                    const params = new URLSearchParams();
-                    params.set('p', type);
-                    const getYearCode = (y) => { if(y === 'الصف الأول الثانوي') return '1'; if(y === 'الصف الثاني الثانوي') return '2'; if(y === 'الصف الثالث الثانوي') return '3'; return ''; };
-                    const getSystemCode = (s) => { if(s === 'علمي علوم') return 's'; if(s === 'علمي رياضة') return 'm'; if(s === 'أدبي') return 'l'; if(s === 'نظام البكالوريا') return 'b'; return ''; };
-                    if (!hideYearFilter && filterYear !== 'اختار الصف') { const yCode = getYearCode(filterYear); if(yCode) params.set('y', yCode); }
-                    if (showSystemFilter && filterSystem !== 'اختار الشعبة') { const sCode = getSystemCode(filterSystem); if(sCode) params.set('s', sCode); }
-                    const shareUrl = `${baseUrl}?${params.toString()}`;
-                    if (navigator.share) await navigator.share({ title: title, text: `تصفح ${title} - الثانوية العامة`, url: shareUrl });
-                    else { await navigator.clipboard.writeText(shareUrl); showToast("تم نسخ رابط القسم بالفلاتر", "success"); }
-                } catch (err) { console.error(err); }
-            };
-
             return html`
                 <div className="bg-soft-white p-3 md:p-4 rounded-xl shadow-sm border border-indigo-900/5">
                     <div className="flex items-start justify-between mb-3 border-b border-slate-100 pb-2 gap-2 relative">
@@ -303,25 +286,21 @@
                         </div>
 
                         <div className="flex items-center gap-1.5 flex-shrink-0 pt-0.5" ref=${dropdownRef}>
-                            <button onClick=${handleShareSection} className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 w-6 h-6 md:w-7 md:h-7 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm" title="مشاركة القسم">
-                                <i className="fa-solid fa-share-nodes text-[10px] md:text-xs"></i>
-                            </button>
-
-                            ${type !== 'activities' && subscribedTeachers.length > 0 && html`
-                                <div className="relative">
-                                    <button onClick=${() => setOpenDropdown(openDropdown === 'teacher' ? null : 'teacher')} className="flex items-center gap-1.5 bg-amber-500 text-indigo-950 text-[9px] md:text-[10px] font-black rounded-md px-2.5 py-1.5 outline-none cursor-pointer shadow-sm border border-amber-400 hover:bg-amber-400">
-                                        ${filterTeacher === 'اختار المعلم' ? 'المعلم' : ((Array.isArray(subscribedTeachers) && subscribedTeachers.find(t => t.uid === filterTeacher)?.name) || 'المعلم')} <i className=${`fa-solid fa-chevron-down text-[8px] ${openDropdown === 'teacher' ? 'rotate-180' : ''}`}></i>
-                                    </button>
-                                    ${openDropdown === 'teacher' && html`
-                                        <div className="absolute top-full mt-1 left-0 w-36 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden max-h-48 overflow-y-auto">
-                                            <div onClick=${() => { setFilterTeacher('اختار المعلم'); setVisibleCount(6); setOpenDropdown(null); }} className=${`px-3 py-2 text-[10px] font-bold cursor-pointer border-b border-slate-50 hover:bg-slate-50 ${filterTeacher === 'اختار المعلم' ? 'bg-indigo-50 text-indigo-900' : 'text-slate-700'}`}>الكل</div>
-                                            ${Array.isArray(subscribedTeachers) && subscribedTeachers.map(t => html`<div key=${t.uid} onClick=${() => { setFilterTeacher(t.uid); setVisibleCount(6); setOpenDropdown(null); }} className=${`px-3 py-2 text-[10px] font-bold cursor-pointer border-b border-slate-50 hover:bg-slate-50 last:border-0 ${filterTeacher === t.uid ? 'bg-indigo-50 text-indigo-900' : 'text-slate-700'}`}>${t.name}</div>`)}
-                                        </div>
-                                    `}
-                                </div>
-                            `}
-
-                            ${!isSubscribed && (!hideYearFilter || showSystemFilter) && html`
+                            ${isSubscribed ? html`
+                                ${subscribedTeachers.length > 0 && html`
+                                    <div className="relative">
+                                        <button onClick=${() => setOpenDropdown(openDropdown === 'teacher' ? null : 'teacher')} className="flex items-center gap-1.5 bg-amber-500 text-indigo-950 text-[9px] md:text-[10px] font-black rounded-md px-2.5 py-1.5 outline-none cursor-pointer shadow-sm border border-amber-400 hover:bg-amber-400">
+                                            ${filterTeacher === 'اختار المعلم' ? 'المعلم' : ((Array.isArray(subscribedTeachers) && subscribedTeachers.find(t => t.uid === filterTeacher)?.name) || 'المعلم')} <i className=${`fa-solid fa-chevron-down text-[8px] ${openDropdown === 'teacher' ? 'rotate-180' : ''}`}></i>
+                                        </button>
+                                        ${openDropdown === 'teacher' && html`
+                                            <div className="absolute top-full mt-1 right-0 w-36 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden max-h-48 overflow-y-auto">
+                                                <div onClick=${() => { setFilterTeacher('اختار المعلم'); setOpenDropdown(null); }} className=${`px-3 py-2 text-[10px] font-bold cursor-pointer border-b border-slate-50 hover:bg-slate-50 ${filterTeacher === 'اختار المعلم' ? 'bg-indigo-50 text-indigo-900' : 'text-slate-700'}`}>الكل</div>
+                                                ${Array.isArray(subscribedTeachers) && subscribedTeachers.map(t => html`<div key=${t.uid} onClick=${() => { setFilterTeacher(t.uid); setOpenDropdown(null); }} className=${`px-3 py-2 text-[10px] font-bold cursor-pointer border-b border-slate-50 hover:bg-slate-50 last:border-0 ${filterTeacher === t.uid ? 'bg-indigo-50 text-indigo-900' : 'text-slate-700'}`}>${t.name}</div>`)}
+                                            </div>
+                                        `}
+                                    </div>
+                                `}
+                            ` : html`
                                 <${React.Fragment}>
                                     ${!hideYearFilter && html`
                                         <div className="relative">
@@ -330,7 +309,7 @@
                                             </button>
                                             ${openDropdown === 'year' && html`
                                                 <div className="absolute top-full mt-1 right-0 w-32 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden">
-                                                    ${years.map(y => html`<div key=${y} onClick=${() => { setFilterYear(y); setVisibleCount(6); setOpenDropdown(null); }} className=${`px-3 py-2 text-[10px] font-bold cursor-pointer border-b border-slate-50 last:border-0 ${filterYear === y ? 'bg-indigo-50 text-indigo-900' : 'text-slate-700 hover:bg-slate-50'}`}>${y}</div>`)}
+                                                    ${years.map(y => html`<div key=${y} onClick=${() => { setFilterYear(y); setOpenDropdown(null); }} className=${`px-3 py-2 text-[10px] font-bold cursor-pointer border-b border-slate-50 last:border-0 ${filterYear === y ? 'bg-indigo-50 text-indigo-900' : 'text-slate-700 hover:bg-slate-50'}`}>${y}</div>`)}
                                                 </div>
                                             `}
                                         </div>
@@ -341,8 +320,8 @@
                                                 ${filterSystem} <i className=${`fa-solid fa-chevron-down text-[8px] ${openDropdown === 'system' ? 'rotate-180' : ''}`}></i>
                                             </button>
                                             ${openDropdown === 'system' && html`
-                                                <div className="absolute top-full mt-1 right-0 w-32 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden">
-                                                    ${systems.map(s => html`<div key=${s} onClick=${() => { setFilterSystem(s); setVisibleCount(6); setOpenDropdown(null); }} className=${`px-3 py-2 text-[10px] font-bold cursor-pointer border-b border-slate-50 last:border-0 ${filterSystem === s ? 'bg-indigo-50 text-indigo-900' : 'text-slate-700 hover:bg-slate-50'}`}>${s}</div>`)}
+                                                <div className="absolute top-full mt-1 left-0 w-32 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden">
+                                                    ${systems.map(s => html`<div key=${s} onClick=${() => { setFilterSystem(s); setOpenDropdown(null); }} className=${`px-3 py-2 text-[10px] font-bold cursor-pointer border-b border-slate-50 last:border-0 ${filterSystem === s ? 'bg-indigo-50 text-indigo-900' : 'text-slate-700 hover:bg-slate-50'}`}>${s}</div>`)}
                                                 </div>
                                             `}
                                         </div>
@@ -468,7 +447,7 @@
         const TeachersSlider = React.memo(({ teachers, unlockedTeachers, onTeacherClick, onNavigateMore }) => {
             if (!Array.isArray(teachers) || teachers.length === 0) return null;
 
-            const homeTeachers = teachers.slice(0, 5);
+            const homeTeachers = teachers.slice(0, 6); // زيادة العدد ليكون متناسق في شبكة زوجية
 
             return html`
                 <div className="space-y-4">
@@ -477,34 +456,57 @@
                         <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${teachers.length}</span>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                         ${homeTeachers.map(teacher => {
                             const isUnlocked = Array.isArray(unlockedTeachers) && unlockedTeachers.includes(teacher.uid);
                             return html`
-                                <div key=${teacher.uid} className="flex flex-row items-center gap-4 bg-white border border-indigo-900/5 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-indigo-600"></div>
+                                <div key=${teacher.uid} className="flex flex-row items-center gap-3 bg-white border border-slate-100 rounded-2xl p-3 md:p-4 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-300 relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 via-amber-500 to-indigo-900 group-hover:w-1.5 transition-all"></div>
+                                    
                                     <div className="relative flex-shrink-0">
-                                        <img src=${teacher.photoUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop'} 
-                                             className="w-16 h-16 rounded-full object-cover border-2 border-indigo-50 shadow-sm" />
-                                        <span className="absolute bottom-1 right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full animate-pulse" title="متصل الآن"></span>
-                                    </div>
-                                    <div className="flex-grow min-w-0 flex flex-col justify-between">
-                                        <div>
-                                            <h4 className="font-black text-slate-800 text-xs md:text-sm leading-tight truncate">${teacher.name}</h4>
-                                            <span className="text-[8px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full mt-1 inline-block">متصل أونلاين</span>
-                                            <p className="text-[10px] text-slate-500 font-bold leading-relaxed line-clamp-1 mt-1">${teacher.description || 'معلم خبير بوزارة التربية والتعليم.'}</p>
+                                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full p-0.5 bg-gradient-to-tr from-amber-400 to-indigo-900 shadow-sm">
+                                            <img src=${teacher.photoUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop'} 
+                                                 className="w-full h-full rounded-full object-cover bg-white" 
+                                                 alt=${teacher.name}
+                                                 onError=${(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop'; }} />
                                         </div>
-                                        <div className="flex flex-wrap gap-1 mt-1.5">
-                                            ${Array.isArray(teacher.subjects) && teacher.subjects.map(sub => html`<span key=${sub} className="text-[8px] font-black text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">${sub}</span>`)}
+                                        <span className="absolute bottom-0 left-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow animate-pulse" title="متصل الآن"></span>
+                                    </div>
+
+                                    <div className="flex-grow min-w-0 flex flex-col justify-center space-y-1 text-right">
+                                        <div className="flex flex-wrap items-center gap-1.5">
+                                            <h4 className="font-black text-slate-800 text-xs md:text-sm tracking-tight truncate max-w-[65%]">${teacher.name}</h4>
+                                            <span className="flex items-center gap-0.5 text-[8px] font-black text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                                                <i className="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i> معتمد
+                                            </span>
+                                        </div>
+                                        
+                                        <p className="text-[9px] md:text-[10px] text-slate-500 font-bold leading-snug line-clamp-1">
+                                            ${teacher.description || 'معلم قدير لتقديم أفضل المناهج الدراسية لطلاب الثانوية.'}
+                                        </p>
+                                        
+                                        <div className="flex flex-wrap gap-1 items-center">
+                                            ${Array.isArray(teacher.subjects) && teacher.subjects.slice(0, 2).map(sub => html`
+                                                <span key=${sub} className="text-[8px] font-black text-indigo-800 bg-indigo-50/70 border border-indigo-100/50 px-1.5 py-0.5 rounded">
+                                                    ${sub}
+                                                </span>
+                                            `)}
+                                            ${teacher.locations && html`
+                                                <div className="flex items-center gap-0.5 text-[8px] font-bold text-amber-600 mr-1">
+                                                    <i className="fa-solid fa-location-dot text-amber-500"></i>
+                                                    <span className="truncate max-w-[80px]">${teacher.locations}</span>
+                                                </div>
+                                            `}
                                         </div>
                                     </div>
+
                                     <div className="flex-shrink-0 self-center">
                                         ${isUnlocked ? html`
-                                            <button onClick=${() => onTeacherClick(teacher)} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-bold p-2 px-3 rounded-xl flex items-center gap-1 transition-colors cursor-pointer">
-                                                <i className="fa-solid fa-circle-check"></i> دخول
+                                            <button onClick=${() => onTeacherClick(teacher)} className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-[10px] font-black py-2 px-3 rounded-xl flex items-center justify-center gap-1 shadow-sm hover:shadow-md transition-all cursor-pointer border-none outline-none">
+                                                <i className="fa-solid fa-door-open"></i> دخول
                                             </button>
                                         ` : html`
-                                            <button onClick=${() => onTeacherClick(teacher)} className="bg-indigo-950 hover:bg-indigo-900 text-white text-[10px] font-bold p-2 px-3 rounded-xl flex items-center gap-1 transition-colors cursor-pointer">
+                                            <button onClick=${() => onTeacherClick(teacher)} className="bg-gradient-to-r from-indigo-900 to-indigo-950 hover:from-indigo-950 hover:to-slate-900 text-white text-[10px] font-black py-2 px-3 rounded-xl flex items-center justify-center gap-1 shadow-sm hover:shadow-md transition-all cursor-pointer border-none outline-none">
                                                 <i className="fa-solid fa-key"></i> تفعيل
                                             </button>
                                         `}
@@ -514,7 +516,7 @@
                         })}
                     </div>
 
-                    ${teachers.length > 5 && html`
+                    ${teachers.length > 6 && html`
                         <div className="text-center pt-2">
                             <button onClick=${onNavigateMore} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-950 border border-indigo-200 font-black text-xs px-6 py-3 rounded-xl transition-all cursor-pointer shadow-sm">
                                 عرض المزيد من النخبة <i className="fa-solid fa-arrow-left text-[10px] mr-1"></i>
@@ -831,14 +833,16 @@
 
                 const unsubSch = onSnapshot(collection(db, 'schedules'), { includeMetadataChanges: true }, (snap) => {
                     const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    setSchedules(data);
-                    localStorage.setItem('foc_schedules_cache', JSON.stringify(data));
+                    const sortedData = data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                    setSchedules(sortedData);
+                    localStorage.setItem('foc_schedules_cache', JSON.stringify(sortedData));
                 });
 
                 const unsubTeach = onSnapshot(collection(db, 'teachers'), { includeMetadataChanges: true }, (snap) => {
                     const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    setTeachers(data);
-                    localStorage.setItem('foc_teachers_cache', JSON.stringify(data));
+                    const sortedData = data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                    setTeachers(sortedData);
+                    localStorage.setItem('foc_teachers_cache', JSON.stringify(sortedData));
                 });
 
                 return () => { unsubMat(); unsubSch(); unsubTeach(); };
@@ -1017,17 +1021,13 @@
 
                                         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-white border border-indigo-900/5 rounded-2xl p-6 shadow-sm relative overflow-hidden">
                                             <div className="md:col-span-7 flex flex-col justify-center space-y-3">
-                                                <span className="text-amber-500 font-black text-[10px] tracking-wider uppercase bg-amber-50 px-2.5 py-1 rounded-md w-fit">من نحن؟</span>
                                                 <h3 className="text-lg md:text-xl font-black text-slate-800 leading-tight">بوابتك التعليمية للتفوق وتحقيق أحلامك الأكاديمية</h3>
                                                 <p className="text-slate-500 text-xs font-bold leading-relaxed">
                                                     نسعى في بوابة الثانوية العامة لتوفير تجربة تعليمية فريدة وموثوقة تجمع نخبة من أفضل المعلمين في مصر لتغطية كافة المناهج بأسلوب ميسّر ومذكرات ومراجعات شاملة في شتى المواد الدراسية.
                                                 </p>
-                                                <button onClick=${() => navigate('about')} className="bg-indigo-900 hover:bg-indigo-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl w-fit flex items-center gap-2 transition-all shadow-sm">
-                                                    اقرأ المزيد <i className="fa-solid fa-arrow-left text-[10px] mr-1"></i>
-                                                </button>
                                             </div>
                                             <div className="md:col-span-5 h-48 md:h-full rounded-xl overflow-hidden shadow-inner relative">
-                                                <img src="https://images.pexels.com/photos/2280886/pexels-photo-2280886.jpeg?auto=compress&cs=tinysrgb&w=600" className="w-full h-full object-cover" alt="من نحن" />
+                                                <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover" alt="قاعة دراسية" />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
                                             </div>
                                         </div>
@@ -1042,34 +1042,40 @@
                                     <button onClick=${goBack} className="text-slate-500 hover:text-indigo-900 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"><i className="fa-solid fa-arrow-right text-xs"></i></button>
                                     <h2 className="text-base md:text-lg font-black text-slate-800">نخبة معلمي المنصة بالكامل</h2>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                                     ${teachers.map(teacher => {
                                         const isUnlocked = Array.isArray(unlockedTeachers) && unlockedTeachers.includes(teacher.uid);
                                         return html`
-                                            <div key=${teacher.uid} className="flex flex-row items-center gap-4 bg-white border border-indigo-900/5 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-                                                <div className="absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-indigo-600"></div>
+                                            <div key=${teacher.uid} className="flex flex-row items-center gap-3 bg-white border border-indigo-900/5 rounded-2xl p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+                                                <div className="absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-indigo-600 group-hover:w-1.5 transition-all"></div>
                                                 <div className="relative flex-shrink-0">
-                                                    <img src=${teacher.photoUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop'} 
-                                                         className="w-16 h-16 rounded-full object-cover border-2 border-indigo-50 shadow-sm" />
-                                                    <span className="absolute bottom-1 right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full animate-pulse"></span>
-                                                </div>
-                                                <div className="flex-grow min-w-0 flex flex-col justify-between">
-                                                    <div>
-                                                        <h4 className="font-black text-slate-800 text-xs md:text-sm leading-tight truncate">${teacher.name}</h4>
-                                                        <span className="text-[8px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full mt-1 inline-block">متصل أونلاين</span>
-                                                        <p className="text-[10px] text-slate-500 font-bold leading-relaxed line-clamp-1 mt-1">${teacher.description || 'معلم خبير بوزارة التربية والتعليم.'}</p>
+                                                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-full p-0.5 bg-gradient-to-tr from-amber-400 to-indigo-900 shadow-sm">
+                                                        <img src=${teacher.photoUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop'} 
+                                                             className="w-full h-full rounded-full object-cover bg-white" />
                                                     </div>
-                                                    <div className="flex flex-wrap gap-1 mt-1.5">
-                                                        ${Array.isArray(teacher.subjects) && teacher.subjects.map(sub => html`<span key=${sub} className="text-[8px] font-black text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">${sub}</span>`)}
+                                                    <span className="absolute bottom-0 left-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow animate-pulse"></span>
+                                                </div>
+                                                <div className="flex-grow min-w-0 flex flex-col justify-center space-y-1 text-right">
+                                                    <div className="flex flex-wrap items-center gap-1.5">
+                                                        <h4 className="font-black text-slate-800 text-xs md:text-sm leading-tight truncate max-w-[65%]">${teacher.name}</h4>
+                                                        <span className="flex items-center gap-0.5 text-[8px] font-black text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                                                            <i className="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i> معتمد
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[9px] md:text-[10px] text-slate-500 font-bold leading-snug line-clamp-1">${teacher.description || 'معلم خبير بوزارة التربية والتعليم.'}</p>
+                                                    
+                                                    <div className="flex flex-wrap items-center gap-1">
+                                                        ${Array.isArray(teacher.subjects) && teacher.subjects.slice(0, 2).map(sub => html`<span key=${sub} className="text-[8px] font-black text-indigo-700 bg-indigo-50 border border-indigo-100/50 px-1.5 py-0.5 rounded">${sub}</span>`)}
+                                                        ${teacher.locations && html`<div className="flex items-center gap-0.5 text-[8px] font-bold text-amber-600"><i className="fa-solid fa-location-dot text-amber-500"></i><span className="truncate max-w-[80px]">${teacher.locations}</span></div>`}
                                                     </div>
                                                 </div>
                                                 <div className="flex-shrink-0 self-center">
                                                     ${isUnlocked ? html`
-                                                        <button onClick=${() => handleTeacherCardClick(teacher)} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-bold p-2 px-3 rounded-xl flex items-center gap-1 transition-colors cursor-pointer">
-                                                            <i className="fa-solid fa-circle-check"></i> دخول
+                                                        <button onClick=${() => handleTeacherCardClick(teacher)} className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 text-white text-[10px] font-bold py-2 px-3 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all cursor-pointer">
+                                                            <i className="fa-solid fa-door-open"></i> دخول
                                                         </button>
                                                     ` : html`
-                                                        <button onClick=${() => handleTeacherCardClick(teacher)} className="bg-indigo-950 hover:bg-indigo-900 text-white text-[10px] font-bold p-2 px-3 rounded-xl flex items-center gap-1 transition-colors cursor-pointer">
+                                                        <button onClick=${() => handleTeacherCardClick(teacher)} className="bg-gradient-to-r from-indigo-900 to-indigo-950 hover:from-indigo-950 text-white text-[10px] font-bold py-2 px-3 rounded-xl flex items-center justify-center gap-1 shadow-sm transition-all cursor-pointer">
                                                             <i className="fa-solid fa-key"></i> تفعيل
                                                         </button>
                                                     `}
