@@ -75,7 +75,6 @@
         const auth = getAuth(app);
         const db = initializeFirestore(app, { localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()}) });
 
-        // تهيئة محرك إنشاء الحسابات الإضافي
         const secondaryApp = initializeSecondaryApp(firebaseConfig, "SecondaryApp");
         const secondaryAuth = getSecondaryAuth(secondaryApp);
 
@@ -83,7 +82,6 @@
         const UPLOAD_PRESET = 'my_public_preset';
         const ADMIN_UID = 'mEVbroYWf7cg68SL8CB2uUS8XhZ2';
 
-        // 🌟 مكون القائمة المنسدلة المخصصة
         const CustomSelect = ({ value, onChange, options, label, icon }) => {
             const [isOpen, setIsOpen] = useState(false);
             const dropdownRef = useRef(null);
@@ -126,7 +124,6 @@
             );
         };
 
-        // 🌟 مكون التحديد المتعدد للمواد
         const MultiSelect = ({ values, onChange, options, label, icon }) => {
             const [isOpen, setIsOpen] = useState(false);
             const dropdownRef = useRef(null);
@@ -233,7 +230,7 @@
         };
 
         const AdminDashboard = ({ materials, schedules, teachers, showToast, userData }) => {
-            const [activeTab, setActiveTab] = useState('content'); // content, teachers, codes, profile
+            const [activeTab, setActiveTab] = useState('content');
             
             // Content States
             const [title, setTitle] = useState('');
@@ -247,7 +244,7 @@
             const [uploadQueue, setUploadQueue] = useState([]);
             const [confirmDelete, setConfirmDelete] = useState(null);
 
-            // Teacher States (سجل المدرسين)
+            // Teacher States
             const [tName, setTName] = useState('');
             const [tPhone, setTPhone] = useState('');
             const [tSubjects, setTSubjects] = useState([]);
@@ -256,14 +253,16 @@
             const [tPhoto, setTPhoto] = useState(null);
             const [tCreds, setTCreds] = useState(null);
 
-            // Code States (الأكواد)
+            // Code States
             const [cStudentName, setCStudentName] = useState('');
             const [cStudentPhone, setCStudentPhone] = useState('');
             const [cTeacher, setCTeacher] = useState('');
             const [cSubjects, setCSubjects] = useState([]);
+            const [cYear, setCYear] = useState('الصف الأول الثانوي');
+            const [cSystem, setCSystem] = useState('عام');
             const [generatedCode, setGeneratedCode] = useState(null);
 
-            // Profile States (تعديل البروفايل)
+            // Profile States
             const [myProfileName, setMyProfileName] = useState('');
             const [myProfilePhone, setMyProfilePhone] = useState('');
             const [myProfileSubjects, setMyProfileSubjects] = useState([]);
@@ -272,7 +271,6 @@
             const [myProfilePhoto, setMyProfilePhoto] = useState(null);
             const [myProfilePhotoUrl, setMyProfilePhotoUrl] = useState('');
 
-            // جلب بيانات ملفك الشخصي الحالي تلقائياً
             useEffect(() => {
                 if (userData && teachers.length > 0) {
                     const myProf = teachers.find(t => t.uid === userData.uid);
@@ -306,13 +304,11 @@
             
             const subjectList = ['اللغة العربية', 'اللغة الإنجليزية', 'اللغة الفرنسية', 'الرياضيات', 'الفيزياء', 'الكيمياء', 'الأحياء', 'التاريخ', 'الجغرافيا', 'الفلسفة', 'علم النفس', 'الجيولوجيا'].map(s => ({label: s, value: s}));
 
-            // تصفية المواد لتظهر مواد المدرس فقط
             const myTeacherProfile = teachers.find(t => t.uid === userData.uid);
             const availableSubjects = userData.role === 'admin' 
                 ? [{value: 'عام', label: 'عام'}, ...subjectList]
                 : (myTeacherProfile?.subjects || []).map(s => ({value: s, label: s}));
 
-            // تعيين القيمة الافتراضية للمادة بناء على المتاح
             useEffect(() => {
                 if(availableSubjects.length > 0 && subject === 'عام' && userData.role === 'teacher') {
                     setSubject(availableSubjects[0].value);
@@ -414,7 +410,6 @@
                     const d = await uploadFileWithProgress(fileToUpload, true);
                     const photoUrl = d.secure_url.replace('/upload/', '/upload/w_500,h_500,c_fill,q_auto,f_auto/');
 
-                    // استخدام Auth الثانوي لإنشاء الحساب لمنع الخروج
                     const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
                     const newUid = userCredential.user.uid;
 
@@ -435,7 +430,8 @@
                     const code = Math.floor(10000 + Math.random() * 90000).toString();
                     await addDoc(collection(db, 'student_codes'), { 
                         code, studentName: cStudentName, studentPhone: cStudentPhone, 
-                        teacherId: cTeacher, subjects: cSubjects, usedByDeviceId: null, createdAt: Date.now() 
+                        teacherId: cTeacher, subjects: cSubjects, year: cYear, studySystem: cSystem,
+                        usedByDeviceId: null, createdAt: Date.now() 
                     });
                     setGeneratedCode(code);
                     showToast("تم توليد ترخيص الاشتراك بنجاح", "success");
@@ -500,8 +496,6 @@
 
             return (
                 <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6 pb-20">
-                    
-                    {/* Header */}
                     <div className="bg-white rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4 border border-gray-100">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-indigo-50 text-indigo-900 rounded-2xl flex items-center justify-center text-xl shadow-inner border border-indigo-100">
@@ -516,8 +510,6 @@
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                        
-                        {/* Sidebar Menu (Stacked column layout as requested) */}
                         <div className="lg:col-span-3 space-y-4">
                             <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
                                 <h3 className="font-black text-sm text-gray-400 mb-4 px-2">بوابات الإدارة والتشغيل</h3>
@@ -546,17 +538,12 @@
                             </div>
                         </div>
 
-                        {/* Main Tab View (Layout adjusts based on Content Tab active state) */}
                         <div className={`${activeTab === 'content' ? 'lg:col-span-6' : 'lg:col-span-9'} space-y-6`}>
-                            
-                            {/* Tab 1: Content Publish */}
                             {activeTab === 'content' && (
                                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 relative z-10 animate-fade">
                                     <h3 className="font-black text-lg text-slate-800 mb-6 border-r-4 border-indigo-900 pr-3">منصة نشر المحتوى التعليمي</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        
                                         <CustomSelect label="قسم النشر" options={sectionOptions} value={sec} onChange={setSec} />
-                                        
                                         {sec !== 'schedule' && sec !== 'activities' && (
                                             <CustomSelect label="الصف الدراسي" options={yearOptions} value={year} onChange={setYear} />
                                         )}
@@ -566,7 +553,6 @@
                                         {sec !== 'schedule' && sec !== 'activities' && (
                                             <CustomSelect label="المادة التعليمية" options={availableSubjects} value={subject} onChange={setSubject} />
                                         )}
-
                                         {sec !== 'schedule' && (
                                             <div className="md:col-span-2">
                                                 <CustomSelect 
@@ -581,7 +567,6 @@
                                                 />
                                             </div>
                                         )}
-
                                         <div className="md:col-span-2 mt-2 relative z-0">
                                             <label className="text-xs font-bold text-gray-600 ml-1 mb-2 block">إرفاق الملفات</label>
                                             <div className="relative border-2 border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors group">
@@ -590,7 +575,6 @@
                                                 <input id="fileInput" type="file" multiple className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleFileChange} />
                                             </div>
                                         </div>
-                                        
                                         {uploadQueue.length === 0 ? (
                                             <div className="space-y-1.5 md:col-span-2 mt-2">
                                                 <label className="text-xs font-bold text-gray-600 ml-1">عنوان أو وصف المحتوى</label>
@@ -615,7 +599,6 @@
                                 </div>
                             )}
 
-                            {/* Tab 2: Register New Teacher */}
                             {activeTab === 'teachers' && userData.role === 'admin' && (
                                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-fade">
                                     <h3 className="font-black text-lg text-slate-800 mb-6 border-r-4 border-indigo-900 pr-3">بوابة تسجيل المعلمين</h3>
@@ -628,9 +611,7 @@
                                             <label className="text-xs font-bold text-gray-600 ml-1">رقم هاتف المعلم</label>
                                             <input value={tPhone} onChange={e=>setTPhone(e.target.value)} className="w-full border border-gray-200 p-3.5 rounded-xl bg-gray-50 font-bold mt-1 focus:ring-2 focus:ring-indigo-500" dir="ltr" placeholder="01..." />
                                         </div>
-                                        
                                         <MultiSelect label="المواد الدراسية الخاصة بالمعلم" options={subjectList} values={tSubjects} onChange={setTSubjects} icon="fa-book" />
-                                        
                                         <div>
                                             <label className="text-xs font-bold text-gray-600 ml-1">مقر التواجد (السناتر أو كتابة أونلاين فقط)</label>
                                             <input value={tLocations} onChange={e=>setTLocations(e.target.value)} className="w-full border border-gray-200 p-3.5 rounded-xl bg-gray-50 font-bold mt-1 focus:ring-2 focus:ring-indigo-500" placeholder="سنتر الأمل، أونلاين فقط..." />
@@ -643,11 +624,9 @@
                                             <label className="text-xs font-bold text-gray-600 ml-1 block mb-2">صورة شخصية للمعلم (مطلوبة للبطاقة)</label>
                                             <input type="file" accept="image/*" onChange={e=>setTPhoto(e.target.files[0])} className="w-full text-sm font-bold text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-gray-200 rounded-xl p-2 bg-gray-50" />
                                         </div>
-                                        
                                         <button onClick={createTeacher} disabled={loading} className="w-full bg-indigo-900 hover:bg-indigo-800 text-white py-4 rounded-xl font-black shadow-lg transition-colors">
                                             {loading ? <><i className="fa-solid fa-circle-notch fa-spin"></i> جاري حفظ السجلات...</> : <><i className="fa-solid fa-user-plus ml-1"></i> تأكيد وحفظ حساب المعلم</>}
                                         </button>
-
                                         {tCreds && (
                                             <div className="mt-6 p-6 bg-green-50 border-2 border-green-200 rounded-2xl text-center relative overflow-hidden">
                                                 <div className="absolute top-0 right-0 w-full h-1 bg-green-400"></div>
@@ -663,7 +642,6 @@
                                 </div>
                             )}
 
-                            {/* Tab 3: Student Codes */}
                             {activeTab === 'codes' && userData.role === 'admin' && (
                                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-fade">
                                     <h3 className="font-black text-lg text-slate-800 mb-6 border-r-4 border-indigo-900 pr-3">إدارة اشتراكات وأكواد الطلاب</h3>
@@ -676,6 +654,9 @@
                                             <label className="text-xs font-bold text-gray-600 ml-1">رقم هاتف الطالب / ولي الأمر</label>
                                             <input value={cStudentPhone} onChange={e=>setCStudentPhone(e.target.value)} className="w-full border border-gray-200 p-3.5 rounded-xl bg-gray-50 font-bold mt-1 focus:ring-2 focus:ring-indigo-500" dir="ltr" placeholder="01..." />
                                         </div>
+                                        
+                                        <CustomSelect label="الصف الدراسي المستهدف" options={yearOptions} value={cYear} onChange={setCYear} icon="fa-graduation-cap" />
+                                        <CustomSelect label="الشعبة / القسم" options={systemOptions} value={cSystem} onChange={setCSystem} icon="fa-circle-nodes" />
                                         
                                         <CustomSelect label="اختر المعلم المراد ربط الطالب به" options={teachers.map(t=>({value: t.uid, label: t.name, icon: 'fa-chalkboard-user'}))} value={cTeacher} onChange={setCTeacher} icon="fa-chalkboard-user" />
                                         
@@ -698,7 +679,6 @@
                                 </div>
                             )}
 
-                            {/* Tab 4: Edit My Profile */}
                             {activeTab === 'profile' && (
                                 <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 animate-fade">
                                     <h3 className="font-black text-lg text-slate-800 mb-6 border-r-4 border-indigo-900 pr-3">إدارة ملفي الشخصي (البروفايل)</h3>
@@ -716,9 +696,7 @@
                                             <label className="text-xs font-bold text-gray-600 ml-1">رقم هاتف التواصل</label>
                                             <input value={myProfilePhone} onChange={e=>setMyProfilePhone(e.target.value)} className="w-full border border-gray-200 p-3.5 rounded-xl bg-gray-50 font-bold mt-1 focus:ring-2 focus:ring-indigo-500" dir="ltr" />
                                         </div>
-                                        
                                         <MultiSelect label="المواد الدراسية التي تدرسها" options={subjectList} values={myProfileSubjects} onChange={setMyProfileSubjects} icon="fa-book" />
-                                        
                                         <div>
                                             <label className="text-xs font-bold text-gray-600 ml-1">مقر التواجد (السناتر أو أونلاين فقط)</label>
                                             <input value={myProfileLocations} onChange={e=>setMyProfileLocations(e.target.value)} className="w-full border border-gray-200 p-3.5 rounded-xl bg-gray-50 font-bold mt-1 focus:ring-2 focus:ring-indigo-500" />
@@ -731,17 +709,14 @@
                                             <label className="text-xs font-bold text-gray-600 ml-1 block mb-2">تحديث صورتك الشخصية</label>
                                             <input type="file" accept="image/*" onChange={e=>setMyProfilePhoto(e.target.files[0])} className="w-full text-sm font-bold text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-gray-200 rounded-xl p-2 bg-gray-50" />
                                         </div>
-                                        
                                         <button onClick={saveMyProfile} disabled={loading} className="w-full bg-indigo-900 hover:bg-indigo-800 text-white py-4 rounded-xl font-black shadow-lg transition-colors">
                                             {loading ? <><i className="fa-solid fa-circle-notch fa-spin"></i> جاري حفظ البروفايل...</> : <><i className="fa-solid fa-circle-check ml-1"></i> حفظ وتحديث الملف الشخصي</>}
                                         </button>
                                     </div>
                                 </div>
                             )}
-
                         </div>
 
-                        {/* List Area (Shows only during Content Tab active) */}
                         {activeTab === 'content' && (
                             <div className="lg:col-span-3 space-y-6">
                                 <div className="bg-white p-5 rounded-3xl border border-gray-100 h-[650px] flex flex-col">
@@ -776,10 +751,8 @@
                                 </div>
                             </div>
                         )}
-
                     </div>
 
-                    {/* Delete Modal */}
                     {confirmDelete && (
                         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                             <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm animate-fade" onClick={() => setConfirmDelete(null)}></div>
