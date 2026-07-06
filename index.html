@@ -209,7 +209,6 @@
                 return () => document.removeEventListener("mousedown", handleClickOutside);
             },[]);
 
-            // إصلاح مشكلة تعليق الفلترة: إعادة تعيين عدد العناصر المرئية عند تغير الفلاتر
             useEffect(() => {
                 setVisibleCount(6);
             }, [filterYear, filterSystem, filterTeacher]);
@@ -562,7 +561,7 @@
 
             const[materials, setMaterials] = useState(() => {
                 try {
-                    const cached = localStorage.getItem('foc_materials_cache');
+                    const cached = localStorage.getItem('v2_materials_cache');
                     if (!cached || cached === 'undefined') return [];
                     const parsed = JSON.parse(cached);
                     return Array.isArray(parsed) ? parsed : [];
@@ -570,7 +569,7 @@
             });
             const[schedules, setSchedules] = useState(() => {
                 try {
-                    const cached = localStorage.getItem('foc_schedules_cache');
+                    const cached = localStorage.getItem('v2_schedules_cache');
                     if (!cached || cached === 'undefined') return [];
                     const parsed = JSON.parse(cached);
                     return Array.isArray(parsed) ? parsed : [];
@@ -578,7 +577,7 @@
             });
             const[teachers, setTeachers] = useState(() => {
                 try {
-                    const cached = localStorage.getItem('foc_teachers_cache');
+                    const cached = localStorage.getItem('v2_teachers_cache');
                     if (!cached || cached === 'undefined') return [];
                     const parsed = JSON.parse(cached);
                     return Array.isArray(parsed) ? parsed : [];
@@ -586,7 +585,7 @@
             });
             const[unlockedTeachers, setUnlockedTeachers] = useState(() => {
                 try {
-                    const cached = localStorage.getItem('foc_unlocked_teachers');
+                    const cached = localStorage.getItem('v2_unlocked_teachers');
                     if (!cached || cached === 'undefined') return [];
                     const parsed = JSON.parse(cached);
                     return Array.isArray(parsed) ? parsed : [];
@@ -672,7 +671,7 @@
 
                 try {
                     const q = query(
-                        collection(db, 'student_codes'),
+                        collection(db, 'v2_student_codes'), // تم تعديل اسم الجدول
                         where('code', '==', enteredCode.trim()),
                         where('teacherId', '==', teacherId)
                     );
@@ -686,10 +685,10 @@
                     const codeDoc = querySnapshot.docs[0];
                     const codeData = codeDoc.data();
                     
-                    let deviceId = localStorage.getItem('foc_device_id');
+                    let deviceId = localStorage.getItem('v2_device_id');
                     if (!deviceId) {
                         deviceId = 'dev_' + Math.random().toString(36).slice(2, 11);
-                        localStorage.setItem('foc_device_id', deviceId);
+                        localStorage.setItem('v2_device_id', deviceId);
                     }
                     
                     if (codeData.usedByDeviceId && codeData.usedByDeviceId !== deviceId) {
@@ -698,14 +697,14 @@
                         return;
                     }
                     
-                    await updateDoc(doc(db, 'student_codes', codeDoc.id), {
+                    await updateDoc(doc(db, 'v2_student_codes', codeDoc.id), {
                         usedByDeviceId: deviceId,
                         activatedAt: Date.now()
                     });
                     
                     const updatedUnlocked = [...unlockedTeachers, teacherId];
                     setUnlockedTeachers(updatedUnlocked);
-                    localStorage.setItem('foc_unlocked_teachers', JSON.stringify(updatedUnlocked));
+                    localStorage.setItem('v2_unlocked_teachers', JSON.stringify(updatedUnlocked));
                     
                     showToast("تم تفعيل اشتراك المعلم بنجاح! 🎉", "success");
                     setSubCode('');
@@ -750,7 +749,7 @@
                         const token = await getToken(messaging, { vapidKey: 'BE3EmhXjZXjrDdn4duFuZ7cFpHppvPGgCI-X1M8VCPgSlBuHRg-BD6cxnvOD8SE3HzC33dBgVwCOzpEW1zKbvgk', serviceWorkerRegistration: swRegistration });
                         if (token) {
                             console.log('FCM Device Token:', token);
-                            const tokenRef = doc(db, 'fcm_tokens', token);
+                            const tokenRef = doc(db, 'v2_fcm_tokens', token); // تم تعديل اسم الجدول
                             await setDoc(tokenRef, { token: token, platform: navigator.userAgent, createdAt: serverTimestamp() }, { merge: true });
                             showToast("تم تفعيل الإشعارات بنجاح 🎉", "success");
                         }
@@ -823,26 +822,27 @@
             };
 
             useEffect(() => {
-                const qMat = query(collection(db, 'materials'), orderBy('createdAt', 'desc'), limit(150));
+                // تم تعديل أسماء الجداول هنا لتكون v2_
+                const qMat = query(collection(db, 'v2_materials'), orderBy('createdAt', 'desc'), limit(150));
                 const unsubMat = onSnapshot(qMat, { includeMetadataChanges: true }, (snap) => {
                     const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                     setMaterials(data);
                     setIsDataLoading(false); 
-                    localStorage.setItem('foc_materials_cache', JSON.stringify(data));
+                    localStorage.setItem('v2_materials_cache', JSON.stringify(data));
                 });
 
-                const unsubSch = onSnapshot(collection(db, 'schedules'), { includeMetadataChanges: true }, (snap) => {
+                const unsubSch = onSnapshot(collection(db, 'v2_schedules'), { includeMetadataChanges: true }, (snap) => {
                     const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                     const sortedData = data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
                     setSchedules(sortedData);
-                    localStorage.setItem('foc_schedules_cache', JSON.stringify(sortedData));
+                    localStorage.setItem('v2_schedules_cache', JSON.stringify(sortedData));
                 });
 
-                const unsubTeach = onSnapshot(collection(db, 'teachers'), { includeMetadataChanges: true }, (snap) => {
+                const unsubTeach = onSnapshot(collection(db, 'v2_teachers'), { includeMetadataChanges: true }, (snap) => {
                     const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                     const sortedData = data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
                     setTeachers(sortedData);
-                    localStorage.setItem('foc_teachers_cache', JSON.stringify(sortedData));
+                    localStorage.setItem('v2_teachers_cache', JSON.stringify(sortedData));
                 });
 
                 return () => { unsubMat(); unsubSch(); unsubTeach(); };
